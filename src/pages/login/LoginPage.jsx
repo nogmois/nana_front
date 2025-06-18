@@ -93,16 +93,17 @@ export default function LoginPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: isMobile ? "64px 24px" : 0,
+          padding: isMobile ? "64px 4px" : 0,
         }}
       >
         <Card
           bordered={false}
           style={{
             width: isMobile ? "100%" : 440,
+            maxWidth: 440,
             boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-            borderRadius: 12,
-            padding: 32,
+            borderRadius: 16,
+            padding: isMobile ? "12px 0px" : 32,
           }}
         >
           <Title level={3} style={{ textAlign: "center", marginBottom: 32 }}>
@@ -116,6 +117,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
+              size="large"
             />
 
             <Input.Password
@@ -123,6 +125,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
+              size="large"
             />
 
             <div style={{ marginTop: 24, textAlign: "center" }}>
@@ -140,6 +143,7 @@ export default function LoginPage() {
               onClick={handleLogin}
               loading={loading}
               disabled={loading}
+              size="large"
             >
               Entrar
             </Button>

@@ -93,7 +93,7 @@ export default function RegisterPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: isMobile ? "64px 24px" : 0,
+          padding: isMobile ? "14px 4px" : 0,
         }}
       >
         <Card
@@ -102,7 +102,7 @@ export default function RegisterPage() {
             width: isMobile ? "100%" : 440,
             boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
             borderRadius: 12,
-            padding: 32,
+            padding: isMobile ? "12px 0px" : 32,
           }}
         >
           <Title level={3} style={{ textAlign: "center", marginBottom: 32 }}>
@@ -123,7 +123,7 @@ export default function RegisterPage() {
                 { type: "email", message: "E-mail inválido" },
               ]}
             >
-              <Input placeholder="exemplo@dominio.com" />
+              <Input placeholder="exemplo@dominio.com" size="large" />
             </Form.Item>
 
             <Form.Item
@@ -139,7 +139,7 @@ export default function RegisterPage() {
               ]}
               hasFeedback
             >
-              <Input.Password placeholder="Senha forte" />
+              <Input.Password placeholder="Senha forte" size="large" />
             </Form.Item>
 
             <Form.Item
@@ -158,7 +158,7 @@ export default function RegisterPage() {
                 }),
               ]}
             >
-              <Input.Password placeholder="Repita a senha" />
+              <Input.Password placeholder="Repita a senha" size="large" />
             </Form.Item>
 
             {/* Checkbox de aceitação de termos */}
@@ -182,7 +182,13 @@ export default function RegisterPage() {
               </Checkbox>
             </Form.Item>
 
-            <Button type="primary" htmlType="submit" block loading={loading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              loading={loading}
+              size="large"
+            >
               {loading ? "Criando…" : "Cadastrar"}
             </Button>
           </Form>

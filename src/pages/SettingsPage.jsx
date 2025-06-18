@@ -1,7 +1,7 @@
 // src/pages/SettingsPage.jsx
 import React, { useMemo } from "react";
 import dayjs from "dayjs";
-import { Layout, Card, Typography, Tag, Spac, Button } from "antd";
+import { Layout, Card, Typography, Tag, Space, Button } from "antd";
 import Navbar from "../components/Navbar"; // 👈
 import SubscriptionInfo from "../components/SubscriptionInfo"; // opcional
 import { LogoutOutlined } from "@ant-design/icons";
