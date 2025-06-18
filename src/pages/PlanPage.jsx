@@ -122,7 +122,7 @@ export default function PlanPage() {
         style={{
           maxWidth: 1200,
           margin: "0 auto",
-          padding: isMobile ? 16 : 32,
+          padding: isMobile ? "16px 16px 80px" : "32px",
         }}
       >
         {/* Hero */}
