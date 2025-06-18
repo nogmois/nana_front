@@ -11,6 +11,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import BottomNavbar from "./components/BottomNavbar";
 import OnboardingPage from "./pages/onboarding/OnboardingPage";
 import RegisterPage from "./pages/login/RegisterPage";
+import SuccessPage from "./pages/successPage";
+
+import { TermsPage, PrivacyPage } from "./pages/LegalPages";
 
 export default function App() {
   return (
@@ -19,6 +22,9 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route
           path="/onboarding"
           element={
@@ -65,6 +71,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <PlanPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/success"
+          element={
+            <ProtectedRoute>
+              <SuccessPage />
             </ProtectedRoute>
           }
         />

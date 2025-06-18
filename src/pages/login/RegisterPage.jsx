@@ -1,6 +1,6 @@
 // src/pages/login/RegisterPage.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../../services/api";
 import {
   Row,
@@ -12,6 +12,7 @@ import {
   message,
   Grid,
   Form,
+  Checkbox,
 } from "antd";
 
 const { Title, Text } = Typography;
@@ -34,6 +35,11 @@ export default function RegisterPage() {
     try {
       // 1) cria usuário
       await api.post("/auth/cadastro", { email, password });
+
+      // Dispara o evento de conversão do Google Ads
+      if (window.gtag_report_conversion) {
+        window.gtag_report_conversion();
+      }
 
       // 2) login automático
       const res = await api.post("/auth/login", { email, password });
@@ -144,7 +150,7 @@ export default function RegisterPage() {
               rules={[
                 { required: true, message: "Confirme a senha" },
                 ({ getFieldValue }) => ({
-                  validator(_, value) {
+                  validatoar(_, value) {
                     return value && value === getFieldValue("password")
                       ? Promise.resolve()
                       : Promise.reject("As senhas não coincidem");
@@ -153,6 +159,27 @@ export default function RegisterPage() {
               ]}
             >
               <Input.Password placeholder="Repita a senha" />
+            </Form.Item>
+
+            {/* Checkbox de aceitação de termos */}
+            <Form.Item
+              name="terms"
+              valuePropName="checked"
+              rules={[
+                {
+                  validator: (_, value) =>
+                    value
+                      ? Promise.resolve()
+                      : Promise.reject(
+                          new Error("Você deve aceitar os Termos de Uso")
+                        ),
+                },
+              ]}
+            >
+              <Checkbox>
+                Li e aceito os <Link to="/terms">Termos de Uso</Link> e a{" "}
+                <Link to="/privacy">Política de Privacidade</Link>
+              </Checkbox>
             </Form.Item>
 
             <Button type="primary" htmlType="submit" block loading={loading}>

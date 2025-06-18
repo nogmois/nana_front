@@ -1,7 +1,7 @@
 import React from "react";
 import { Layout, Row, Col, Typography, Button, Card, Space, Image } from "antd";
 import { CheckCircleOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./LandingPage.css";
 
 const { Header, Content, Footer } = Layout;
@@ -212,6 +212,12 @@ export default function LandingPage() {
 
       <Footer className="landing-footer">
         <Text>© 2025 NanaFácil. Todos os direitos reservados.</Text>
+        <div style={{ marginTop: 8 }}>
+          <Link to="/terms" style={{ marginRight: 16 }}>
+            Termos de Uso
+          </Link>
+          <Link to="/privacy">Política de Privacidade</Link>
+        </div>
       </Footer>
     </Layout>
   );
