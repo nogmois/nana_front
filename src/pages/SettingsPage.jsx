@@ -79,17 +79,24 @@ export default function SettingsPage() {
               </Text>
             ) : null}
           </Space>
-
           <Button
             type="primary"
-            danger
-            icon={<LogoutOutlined />}
-            onClick={handleLogout}
-            style={{ marginTop: 24 }}
+            onClick={() => navigate("/plans")}
+            style={{ marginTop: 16 }}
           >
-            Sair da conta
+            Gerenciar assinatura
           </Button>
         </Card>
+
+        <Button
+          type="primary"
+          danger
+          icon={<LogoutOutlined />}
+          onClick={handleLogout}
+          style={{ marginTop: 24 }}
+        >
+          Sair
+        </Button>
 
         {/* …outros blocos de configurações abaixo… */}
       </Content>

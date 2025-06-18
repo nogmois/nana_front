@@ -1,4 +1,9 @@
 import React from "react";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/autoplay";
 import {
   Layout,
   Row,
@@ -15,6 +20,7 @@ import {
 import { CheckCircleOutlined } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
 import "./LandingPage.css";
+
 const { useBreakpoint } = Grid;
 
 import { MenuOutlined } from "@ant-design/icons";
@@ -60,19 +66,20 @@ export default function LandingPage() {
   const handleRegister = () => navigate("/register");
 
   const screens = useBreakpoint();
-  const [openDrawer, setOpenDrawer] = React.useState(false);
-
   // Funcionalidades / benefícios
   const features = [
-    "Algoritmo personalizado de janelas de sono",
-    "Alertas em tempo real via WhatsApp",
-    "Relatórios detalhados em PDF",
-    "Plano de 14 dias baseado em SBP",
-    "Histórico completo de eventos de sono e mamadas",
-    "Gráficos interativos de padrão de sono",
-    "Interface intuitiva e fácil de usar",
-    "Dicas exclusivas de especialistas",
+    "Sono mais longo com algoritmo personalizado",
+    "Alertas no WhatsApp no momento certo",
+    "Relatórios em PDF para o pediatra",
+    "Plano de 14 dias aprovado por especialistas",
+    "Acompanhamento completo de mamadas e sonecas",
+    "Gráficos fáceis de entender e acompanhar",
+    "App pensado para mães reais, sem complicação",
+    "Conteúdo exclusivo de especialistas em sono",
   ];
+  const isMobile = !screens.sm;
+  const visibleFeatures = isMobile ? features.slice(0, 4) : features;
+  const [openDrawer, setOpenDrawer] = React.useState(false);
 
   return (
     <Layout className="landing-layout">
@@ -159,8 +166,8 @@ export default function LandingPage() {
             Todos os benefícios para você e seu bebê
           </Title>
           <Row gutter={[24, 24]} justify="center">
-            {features.map((item) => (
-              <Col xs={24} sm={12} md={6} key={item}>
+            {visibleFeatures.map((item, i) => (
+              <Col xs={24} sm={12} md={6} key={i}>
                 <Card bordered={false} className="feature-card-upgraded">
                   <div className="feature-icon-wrapper">
                     <CheckCircleOutlined className="feature-icon-large" />
@@ -223,18 +230,33 @@ export default function LandingPage() {
           <Title level={2} className="section-title">
             O que dizem as mamães
           </Title>
-          <Row gutter={[24, 24]} justify="center">
+
+          <Swiper
+            modules={[Autoplay]}
+            slidesPerView={1}
+            spaceBetween={16}
+            loop={true}
+            autoplay={{ delay: 3000, disableOnInteraction: false }}
+            breakpoints={{
+              768: {
+                slidesPerView: 2,
+              },
+              1024: {
+                slidesPerView: 3,
+              },
+            }}
+          >
             {testimonials.map(({ text, author }, i) => (
-              <Col xs={24} sm={12} md={8} key={i}>
-                <Card className="testimonial-card">
+              <SwiperSlide key={i}>
+                <Card className="testimonial-card" style={{ height: "100%" }}>
                   <Paragraph className="testimonial-text">"{text}"</Paragraph>
                   <Text strong className="testimonial-author">
                     {author}
                   </Text>
                 </Card>
-              </Col>
+              </SwiperSlide>
             ))}
-          </Row>
+          </Swiper>
         </section>
 
         {/* ACTION */}
@@ -242,6 +264,10 @@ export default function LandingPage() {
           <Title level={2} className="section-title">
             Pronta para noites mais tranquilas?
           </Title>
+          <Paragraph className="action-subtitle">
+            Comece agora com um plano personalizado e transforme o sono do seu
+            bebê.
+          </Paragraph>
           <Button
             type="primary"
             size="large"
