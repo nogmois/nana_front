@@ -112,7 +112,7 @@ export default function ReviewPage() {
     dayjs(e.timestamp).format("YYYY-MM-DD")
   );
   const eventosDia = (agrupados[selectedDate] || []).sort(
-    (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
   );
 
   // Calcula resumo de alimentação e sono
@@ -122,7 +122,12 @@ export default function ReviewPage() {
     let longest = 0;
     let lastStart = null;
 
-    eventosDia.forEach((e) => {
+    // Cópia em ordem crescente para o cálculo
+    const eventosOrdenados = [...eventosDia].sort(
+      (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    eventosOrdenados.forEach((e) => {
       if (e.type === "sleep_start") lastStart = dayjs(e.timestamp);
       else if (e.type === "sleep_end" && lastStart) {
         const mins = dayjs(e.timestamp).diff(lastStart, "minute");

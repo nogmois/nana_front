@@ -129,11 +129,10 @@ export default function ChartsPage() {
       })),
     [events, last7Days]
   );
-  const feedAvg = useMemo(
-    () =>
-      (feedVolumeData.reduce((s, d) => s + d.alimentacao, 0) / 7).toFixed(1),
-    [feedVolumeData]
-  );
+  const feedAvg = useMemo(() => {
+    const total = feedVolumeData.reduce((s, d) => s + d.alimentacao, 0);
+    return total > 0 ? (total / 7).toFixed(1) : "0";
+  }, [feedVolumeData]);
 
   /* --------------------------- feed pattern (empilhado 24h) */
   const feedPatternGrouped = useMemo(() => {
@@ -209,6 +208,7 @@ export default function ChartsPage() {
   );
 
   const sleepAvgHm = useMemo(() => {
+    if (sleepAvgMin < 60) return `${sleepAvgMin} min`;
     const h = Math.floor(sleepAvgMin / 60);
     const m = sleepAvgMin % 60;
     return `${h} h ${m} min`;

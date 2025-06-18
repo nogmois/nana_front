@@ -356,9 +356,8 @@ const DashboardPage = () => {
       <Navbar />
       <Content
         style={{
-          padding: isDesktop ? 24 : 0,
+          padding: isDesktop ? 24 : "0px 0px 80px",
           width: "100%",
-          // só aplica 1200px de largura no desktop; no mobile usa 100%
           maxWidth: isDesktop ? 1200 : "100%",
           marginInline: "auto",
         }}
