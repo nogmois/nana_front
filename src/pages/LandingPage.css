@@ -325,7 +325,7 @@
 /* Responsividade */
 @media (max-width: 768px) {
   .attention-title {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
   }
   .attention-section {
     padding: 4rem 1rem 6rem;
@@ -336,5 +336,23 @@
   .action-section {
     padding: 3rem 1rem;
     margin-top: -60px;
+  }
+}
+
+@media (max-width: 576px) {
+  .attention-title {
+    font-size: 0.5rem;
+    max-width: 100%;
+    font-weight: 500;
+  }
+
+  .attention-subtitle {
+    font-size: 1rem;
+    margin-top: 1rem;
+    color: var(--white); /* reforça contraste se o fundo for azul */
+  }
+
+  .attention-text {
+    padding: 0 1rem;
   }
 }

@@ -1,8 +1,23 @@
 import React from "react";
-import { Layout, Row, Col, Typography, Button, Card, Space, Image } from "antd";
+import {
+  Layout,
+  Row,
+  Col,
+  Typography,
+  Button,
+  Card,
+  Space,
+  Image,
+  Grid,
+  Drawer,
+  Menu,
+} from "antd";
 import { CheckCircleOutlined } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
 import "./LandingPage.css";
+const { useBreakpoint } = Grid;
+
+import { MenuOutlined } from "@ant-design/icons";
 
 const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -44,6 +59,9 @@ export default function LandingPage() {
   const handleLogin = () => navigate("/login");
   const handleRegister = () => navigate("/register");
 
+  const screens = useBreakpoint();
+  const [openDrawer, setOpenDrawer] = React.useState(false);
+
   // Funcionalidades / benefícios
   const features = [
     "Algoritmo personalizado de janelas de sono",
@@ -61,19 +79,44 @@ export default function LandingPage() {
       {/* ATTENTION */}
       <Header className="landing-header">
         <div className="logo">NanaFácil</div>
-        <Space size="middle">
-          <Button type="link" className="btn-login" onClick={handleLogin}>
-            Login
-          </Button>
-          <Button
-            type="primary"
-            size="large"
-            className="btn-register"
-            onClick={handleRegister}
-          >
-            Começar grátis
-          </Button>
-        </Space>
+        {screens.xs ? (
+          <>
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setOpenDrawer(true)}
+            />
+            <Drawer
+              title="Menu"
+              placement="right"
+              onClose={() => setOpenDrawer(false)}
+              open={openDrawer}
+            >
+              <Space direction="vertical" style={{ width: "100%" }}>
+                <Button type="link" block onClick={handleLogin}>
+                  Login
+                </Button>
+                <Button type="primary" block onClick={handleRegister}>
+                  Começar grátis
+                </Button>
+              </Space>
+            </Drawer>
+          </>
+        ) : (
+          <Space size="middle">
+            <Button type="link" className="btn-login" onClick={handleLogin}>
+              Login
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              className="btn-register"
+              onClick={handleRegister}
+            >
+              Começar grátis
+            </Button>
+          </Space>
+        )}
       </Header>
 
       <Content className="landing-content">
@@ -83,7 +126,7 @@ export default function LandingPage() {
             <Row align="middle" justify="center" gutter={[32, 32]}>
               <Col xs={24} md={12} className="attention-text">
                 <Title level={1} className="attention-title">
-                  Transforme suas noites com ciência e cuidado
+                  Mais sono para o bebê. Mais paz para você.
                 </Title>
                 <Paragraph className="attention-subtitle">
                   Descubra o poder de um plano de sono personalizado, alertas em

@@ -1,10 +1,11 @@
 // src/pages/SettingsPage.jsx
 import React, { useMemo } from "react";
 import dayjs from "dayjs";
-import { Layout, Card, Typography, Tag, Space } from "antd";
+import { Layout, Card, Typography, Tag, Spac, Button } from "antd";
 import Navbar from "../components/Navbar"; // 👈
 import SubscriptionInfo from "../components/SubscriptionInfo"; // opcional
-
+import { LogoutOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 const { Content } = Layout;
 const { Title, Text } = Typography;
 
@@ -14,6 +15,12 @@ export default function SettingsPage() {
   const hasSub = localStorage.getItem("hasSubscription") === "true";
   const planName = localStorage.getItem("planName");
   const priceDisplay = localStorage.getItem("planPrice");
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
   /* -------- dias restantes -------- */
   const trialInfo = useMemo(() => {
@@ -72,6 +79,16 @@ export default function SettingsPage() {
               </Text>
             ) : null}
           </Space>
+
+          <Button
+            type="primary"
+            danger
+            icon={<LogoutOutlined />}
+            onClick={handleLogout}
+            style={{ marginTop: 24 }}
+          >
+            Sair da conta
+          </Button>
         </Card>
 
         {/* …outros blocos de configurações abaixo… */}
