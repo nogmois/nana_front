@@ -18,7 +18,14 @@ export default function App() {
   const location = useLocation();
 
   // Ocultar o BottomNavbar nessas rotas:
-  const hideNavbarRoutes = ["/", "/login", "/register", "/terms", "/privacy"];
+  const hideNavbarRoutes = [
+    "/",
+    "/login",
+    "/register",
+    "/terms",
+    "/privacy",
+    "/onboarding",
+  ];
   const shouldShowNavbar = !hideNavbarRoutes.includes(location.pathname);
 
   return (

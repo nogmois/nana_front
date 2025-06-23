@@ -385,8 +385,8 @@ export default function ChartsPage() {
               <div style={{ padding: 16 }}>
                 <Text strong>
                   {viewMode === "feed"
-                    ? "Volume de Alimentação"
-                    : "Tempo de Sono"}
+                    ? "🍼 Volume de Alimentação"
+                    : "😴 Tempo de Sono"}
                 </Text>
               </div>
 
