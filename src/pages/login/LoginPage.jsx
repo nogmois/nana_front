@@ -110,44 +110,52 @@ export default function LoginPage() {
             Entrar
           </Title>
 
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <Input
-              type="email"
-              placeholder="E-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              size="large"
-            />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+            style={{ width: "100%" }}
+          >
+            <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+              <Input
+                type="email"
+                placeholder="E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                size="large"
+              />
 
-            <Input.Password
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              size="large"
-            />
+              <Input.Password
+                placeholder="Senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                size="large"
+              />
 
-            <div style={{ marginTop: 24, textAlign: "center" }}>
-              <Text type="secondary">
-                Não tem conta?{" "}
-                <a onClick={() => !loading && navigate("/register")}>
-                  Cadastre-se
-                </a>
-              </Text>
-            </div>
+              <div style={{ marginTop: 24, textAlign: "center" }}>
+                <Text type="secondary">
+                  Não tem conta?{" "}
+                  <a onClick={() => !loading && navigate("/register")}>
+                    Cadastre-se
+                  </a>
+                </Text>
+              </div>
 
-            <Button
-              type="primary"
-              block
-              onClick={handleLogin}
-              loading={loading}
-              disabled={loading}
-              size="large"
-            >
-              Entrar
-            </Button>
-          </Space>
+              <Button
+                type="primary"
+                block
+                htmlType="submit" // isso permite que Enter funcione
+                loading={loading}
+                disabled={loading}
+                size="large"
+              >
+                Entrar
+              </Button>
+            </Space>
+          </form>
 
           {/* Link simples para Home */}
           <Button

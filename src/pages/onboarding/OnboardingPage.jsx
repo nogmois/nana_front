@@ -1,5 +1,5 @@
 // src/pages/onboarding/OnboardingPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Layout,
@@ -14,6 +14,7 @@ import {
   Card,
   message,
 } from "antd";
+import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import locale from "antd/es/date-picker/locale/pt_BR";
 import api from "../../services/api";
@@ -33,6 +34,18 @@ export default function OnboardingPage() {
   const [form] = Form.useForm();
   const selectedGender = Form.useWatch("gender", form);
 
+  /* ───────────────────────────────
+     Se já fez onboarding, redireciona
+  ──────────────────────────────── */
+  useEffect(() => {
+    if (localStorage.getItem("onboardDone") === "true") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
+  /* ───────────────────────────────
+     Salvar bebê
+  ──────────────────────────────── */
   const handleCreateBaby = async (values) => {
     setLoading(true);
     try {
@@ -42,6 +55,10 @@ export default function OnboardingPage() {
         birth_weight_grams: parseInt(values.birth_weight_grams, 10),
       };
       await api.post("/babies", payload);
+
+      /* Marca onboarding concluído */
+      localStorage.setItem("onboardDone", "true");
+
       message.success("Bebê cadastrado com sucesso!");
       navigate("/dashboard");
     } catch {
@@ -49,6 +66,14 @@ export default function OnboardingPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  /* ───────────────────────────────
+     Helpers
+  ──────────────────────────────── */
+  const disabledFutureDate = (current) => {
+    // Bloqueia datas > hoje
+    return current && current > dayjs().endOf("day");
   };
 
   return (
@@ -92,7 +117,7 @@ export default function OnboardingPage() {
             </Row>
           </Form.Item>
 
-          {/* Campos principais em três colunas */}
+          {/* Campos principais */}
           <Row gutter={[24, 16]}>
             <Col xs={24} md={8}>
               <Form.Item
@@ -107,25 +132,46 @@ export default function OnboardingPage() {
                 />
               </Form.Item>
             </Col>
+
             <Col xs={24} md={8}>
               <Form.Item
                 name="birth_date"
                 label="Data de Nascimento"
-                rules={[{ required: true, message: "Selecione a data" }]}
+                rules={[
+                  { required: true, message: "Selecione a data" },
+                  {
+                    validator: (_, value) =>
+                      value && value.isAfter(dayjs())
+                        ? Promise.reject("Data não pode ser futura")
+                        : Promise.resolve(),
+                  },
+                ]}
               >
                 <DatePicker
                   locale={locale}
                   style={{ width: "100%" }}
                   size="large"
                   className="onboarding-input"
+                  disabledDate={disabledFutureDate}
                 />
               </Form.Item>
             </Col>
+
             <Col xs={24} md={8}>
               <Form.Item
                 name="birth_weight_grams"
                 label="Peso ao Nascer (g)"
-                rules={[{ required: true, message: "Informe o peso" }]}
+                rules={[
+                  { required: true, message: "Informe o peso" },
+                  {
+                    validator: (_, value) =>
+                      value && (value < 1000 || value > 6000)
+                        ? Promise.reject(
+                            "Peso deve ficar entre 1 000 g e 6 000 g"
+                          )
+                        : Promise.resolve(),
+                  },
+                ]}
               >
                 <InputNumber
                   style={{ width: "100%" }}
@@ -134,8 +180,11 @@ export default function OnboardingPage() {
                   placeholder="Ex: 3200"
                   size="large"
                   stringMode
-                  formatter={(value) => value?.replace(/\D/g, "")}
-                  parser={(value) => value?.replace(/\D/g, "")}
+                  // Teclado numérico mobile
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  formatter={(v) => v?.replace(/\D/g, "")}
+                  parser={(v) => v?.replace(/\D/g, "")}
                   className="onboarding-input"
                 />
               </Form.Item>

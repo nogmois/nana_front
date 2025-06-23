@@ -36,34 +36,6 @@ const { useBreakpoint } = Grid;
 const cardShadow = "0 4px 12px rgba(0,0,0,0.05)";
 const sectionGap = 24;
 
-// Tooltip compacto para os gráficos empilhados (pattern)
-const renderPatternTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-
-  // mantém só as barras com valor > 0
-  const valid = payload.filter((p) => p.value > 0);
-  if (!valid.length) return null;
-
-  return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #d9d9d9",
-        borderRadius: 4,
-        padding: "4px 8px",
-        fontSize: 12,
-      }}
-    >
-      <strong>{label}</strong>
-      {valid.map((item) => (
-        <div key={item.name}>
-          {item.name} h: <b>{item.value}</b>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 /* -------------------------------------------------------------------------- */
 /* COMPONENTE                                                                 */
 /* -------------------------------------------------------------------------- */
@@ -71,13 +43,26 @@ export default function ChartsPage() {
   const screens = useBreakpoint();
   const isMobile = !screens.sm;
 
-  /* -------------------------------------------------------- estado & fetch */
+  /* ------------------------------------------------------------------ estado */
+  const [daysRange, setDaysRange] = useState(7); // 7 ou 30
   const [babies, setBabies] = useState([]);
   const [selectedBabyId, setSelectedBabyId] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState("feed");
+  const [viewMode, setViewMode] = useState("feed"); // feed | sleep
 
+  /* ---------------------------------------------------------------- lastNDays */
+  const lastNDays = useMemo(
+    () =>
+      [...Array(daysRange)].map((_, i) =>
+        dayjs()
+          .subtract(daysRange - 1 - i, "day")
+          .format("YYYY-MM-DD")
+      ),
+    [daysRange]
+  );
+
+  /* -------------------------------------------------- carregar bebês locais */
   useEffect(() => {
     (async () => {
       try {
@@ -90,13 +75,22 @@ export default function ChartsPage() {
     })();
   }, []);
 
+  /* ----------------------------- eventos (com cache simples em sessionStorage) */
   useEffect(() => {
     if (!selectedBabyId) return;
+    const cacheKey = `events_${selectedBabyId}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setEvents(JSON.parse(cached));
+      return;
+    }
+
     (async () => {
       setLoading(true);
       try {
         const { data } = await api.get(`/events?baby_id=${selectedBabyId}`);
         setEvents(data);
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
       } catch {
         message.error("Erro ao buscar eventos.");
         setEvents([]);
@@ -106,37 +100,27 @@ export default function ChartsPage() {
     })();
   }, [selectedBabyId]);
 
-  /* -------------------------------------------------------------- helpers */
-  const last7Days = useMemo(
-    () =>
-      [...Array(7)].map((_, i) =>
-        dayjs()
-          .subtract(6 - i, "day")
-          .format("YYYY-MM-DD")
-      ),
-    []
-  );
-
-  /* --------------------------- feed volume (barras) + média */
+  /* ---------------------------------------------------------------- helpers */
   const feedVolumeData = useMemo(
     () =>
-      last7Days.map((d) => ({
+      lastNDays.map((d) => ({
         date: dayjs(d).format("DD/MM"),
         alimentacao: events.filter(
           (e) =>
             e.type === "feed" && dayjs(e.timestamp).format("YYYY-MM-DD") === d
         ).length,
       })),
-    [events, last7Days]
+    [events, lastNDays]
   );
+
   const feedAvg = useMemo(() => {
     const total = feedVolumeData.reduce((s, d) => s + d.alimentacao, 0);
-    return total > 0 ? (total / 7).toFixed(1) : "0";
-  }, [feedVolumeData]);
+    return total > 0 ? (total / daysRange).toFixed(1) : "0";
+  }, [feedVolumeData, daysRange]);
 
-  /* --------------------------- feed pattern (empilhado 24h) */
+  /* --------------------- padrão de alimentação empilhado por hora */
   const feedPatternGrouped = useMemo(() => {
-    const pattern = last7Days.flatMap((dateStr) =>
+    const pattern = lastNDays.flatMap((dateStr) =>
       events
         .filter(
           (e) =>
@@ -149,7 +133,7 @@ export default function ChartsPage() {
         }))
     );
 
-    return last7Days.map((d) => {
+    return lastNDays.map((d) => {
       const diaLabel = dayjs(d).format("dd");
       const counts = Array.from({ length: 24 }, (_, h) => ({
         h,
@@ -160,9 +144,9 @@ export default function ChartsPage() {
         ...Object.fromEntries(counts.map((c) => [c.h, c.count])),
       };
     });
-  }, [events, last7Days]);
+  }, [events, lastNDays]);
 
-  /* --------------------------- sessões de sono, volume ------------------ */
+  /* ---------------------------------------------------- sessões de sono */
   const sleepSessions = useMemo(() => {
     const ordered = events
       .filter((e) => ["sleep_start", "sleep_end"].includes(e.type))
@@ -187,7 +171,7 @@ export default function ChartsPage() {
 
   const sleepVolumeData = useMemo(
     () =>
-      last7Days.map((d) => ({
+      lastNDays.map((d) => ({
         date: dayjs(d).format("DD/MM"),
         hours: (
           sleepSessions
@@ -195,17 +179,16 @@ export default function ChartsPage() {
             .reduce((s, x) => s + x.minutes, 0) / 60
         ).toFixed(1),
       })),
-    [sleepSessions, last7Days]
+    [sleepSessions, lastNDays]
   );
 
-  /* -------- média de sono em minutos inteiros + formatação h & min ------ */
-  const sleepAvgMin = useMemo(
-    () =>
-      Math.round(
-        (sleepVolumeData.reduce((s, d) => s + parseFloat(d.hours), 0) / 7) * 60
-      ),
-    [sleepVolumeData]
-  );
+  const sleepAvgMin = useMemo(() => {
+    const totalHours = sleepVolumeData.reduce(
+      (s, d) => s + parseFloat(d.hours),
+      0
+    );
+    return Math.round((totalHours / daysRange) * 60);
+  }, [sleepVolumeData, daysRange]);
 
   const sleepAvgHm = useMemo(() => {
     if (sleepAvgMin < 60) return `${sleepAvgMin} min`;
@@ -214,9 +197,9 @@ export default function ChartsPage() {
     return `${h} h ${m} min`;
   }, [sleepAvgMin]);
 
-  /* --------------------------- sleep pattern (empilhado 24h) */
+  /* --------------------- padrão de sono empilhado por hora */
   const sleepPatternGrouped = useMemo(() => {
-    const pattern = last7Days.flatMap((dateStr) =>
+    const pattern = lastNDays.flatMap((dateStr) =>
       events
         .filter(
           (e) =>
@@ -229,7 +212,7 @@ export default function ChartsPage() {
         }))
     );
 
-    return last7Days.map((d) => {
+    return lastNDays.map((d) => {
       const diaLabel = dayjs(d).format("dd");
       const counts = Array.from({ length: 24 }, (_, h) => ({
         h,
@@ -240,7 +223,20 @@ export default function ChartsPage() {
         ...Object.fromEntries(counts.map((c) => [c.h, c.count])),
       };
     });
-  }, [events, last7Days]);
+  }, [events, lastNDays]);
+
+  /* --------------------- horas realmente usadas para reduzir <Bar>s */
+  const usedHours = useMemo(() => {
+    const patternArray =
+      viewMode === "feed" ? feedPatternGrouped : sleepPatternGrouped;
+    const hours = new Set();
+    patternArray.forEach((d) =>
+      Object.entries(d).forEach(([k, v]) => {
+        if (!isNaN(k) && v > 0) hours.add(Number(k));
+      })
+    );
+    return [...hours].sort((a, b) => a - b);
+  }, [viewMode, feedPatternGrouped, sleepPatternGrouped]);
 
   /* ----------------------------------------------------------- layout util */
   const gutter = isMobile ? [0, 16] : [24, 24]; // [horizontal, vertical]
@@ -356,7 +352,18 @@ export default function ChartsPage() {
           </Col>
         </Row>
 
-        {/* ------------------------------------------------------- toggle */}
+        {/* ------------------------------------------- seletor 7/30 dias */}
+        <Segmented
+          options={[
+            { label: "7 dias", value: 7 },
+            { label: "30 dias", value: 30 },
+          ]}
+          value={daysRange}
+          onChange={setDaysRange}
+          style={{ marginBottom: sectionGap }}
+        />
+
+        {/* ------------------------------------------------------- toggle feed/sleep */}
         <Segmented
           options={[
             { label: "Alimentação", value: "feed" },
@@ -435,16 +442,13 @@ export default function ChartsPage() {
                   <XAxis dataKey="dia" axisLine={false} tickLine={false} />
                   <YAxis axisLine={false} tickLine={false} />
 
-                  {/* tooltip totalmente customizado */}
+                  {/* tooltip custom */}
                   <Tooltip
-                    wrapperStyle={{ outline: "none" }} // remove borda azul do foco
+                    wrapperStyle={{ outline: "none", overflowX: "visible" }}
                     content={({ active, payload, label }) => {
                       if (!active || !payload?.length) return null;
-
-                      // apenas valores > 0
                       const valid = payload.filter((p) => p.value > 0);
                       if (!valid.length) return null;
-
                       return (
                         <div
                           style={{
@@ -453,7 +457,7 @@ export default function ChartsPage() {
                             borderRadius: 6,
                             padding: "6px 8px",
                             fontSize: 12,
-                            maxWidth: 140,
+                            maxWidth: 160,
                             maxHeight: 160,
                             overflowY: "auto",
                             boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
@@ -486,12 +490,13 @@ export default function ChartsPage() {
                     }}
                   />
 
-                  {Array.from({ length: 24 }, (_, i) => (
+                  {usedHours.map((h, i) => (
                     <Bar
-                      key={i}
-                      dataKey={String(i)}
+                      key={h}
+                      dataKey={String(h)}
                       stackId="a"
-                      radius={i === 23 ? [6, 6, 0, 0] : 0}
+                      legendType="none"
+                      radius={i === usedHours.length - 1 ? [6, 6, 0, 0] : 0}
                     />
                   ))}
                 </BarChart>
