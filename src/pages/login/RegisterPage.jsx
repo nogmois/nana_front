@@ -63,6 +63,9 @@ export default function RegisterPage() {
       localStorage.setItem("trialActive", trial_active ? "true" : "false");
       localStorage.setItem("trialEnd", trial_end);
 
+      // força o onboarding como “não concluído”
+      localStorage.setItem("onboardingComplete", "false");
+
       message.success("Conta criada! Bem-vinda(o) 😉");
       navigate("/onboarding");
     } catch (err) {

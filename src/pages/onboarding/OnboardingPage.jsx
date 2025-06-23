@@ -38,7 +38,7 @@ export default function OnboardingPage() {
      Se já fez onboarding, redireciona
   ──────────────────────────────── */
   useEffect(() => {
-    if (localStorage.getItem("onboardDone") === "true") {
+    if (localStorage.getItem("onboardingComplete") === "true") {
       navigate("/dashboard", { replace: true });
     }
   }, [navigate]);
@@ -57,7 +57,7 @@ export default function OnboardingPage() {
       await api.post("/babies", payload);
 
       /* Marca onboarding concluído */
-      localStorage.setItem("onboardDone", "true");
+      localStorage.setItem("onboardingComplete", "true");
 
       message.success("Bebê cadastrado com sucesso!");
       navigate("/dashboard");
