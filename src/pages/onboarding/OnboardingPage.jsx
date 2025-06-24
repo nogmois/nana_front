@@ -38,9 +38,18 @@ export default function OnboardingPage() {
      Se já fez onboarding, redireciona
   ──────────────────────────────── */
   useEffect(() => {
-    if (localStorage.getItem("onboardingComplete") === "true") {
-      navigate("/dashboard", { replace: true });
-    }
+    const checkHasBaby = async () => {
+      try {
+        const res = await api.get("/babies/me");
+        if (res.data.length > 0) {
+          // já tem pelo menos um bebê -> vai direto pro dashboard
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (err) {
+        console.error("Erro ao verificar bebês:", err);
+      }
+    };
+    checkHasBaby();
   }, [navigate]);
 
   /* ───────────────────────────────
