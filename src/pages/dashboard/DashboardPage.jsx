@@ -1,7 +1,8 @@
 // src/pages/DashboardPage.jsx
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dayjs from "dayjs";
+import ptBR from "antd/lib/locale/pt_BR";
 import {
   Row,
   Col,
@@ -13,41 +14,19 @@ import {
   Modal,
   Form,
   Input,
-  DatePicker,
   TimePicker,
   Grid,
   Space,
   message,
-  Spin,
-  Popconfirm,
   Tag,
   Popover,
+  Tour,
+  ConfigProvider,
 } from "antd";
-import {
-  PlusOutlined,
-  PlusCircleOutlined,
-  ManOutlined,
-  WomanOutlined,
-  ClockCircleOutlined,
-} from "@ant-design/icons";
+import { PlusCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import Navbar from "../../components/Navbar";
 import api from "../../services/api";
 import { logout } from "../../utils/auth";
-import { groupBy } from "lodash";
-
-// Recharts imports
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
-
-import BabyModal from "../../components/modal/BabyModal";
-
 const { Content } = Layout;
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -67,10 +46,13 @@ const DashboardPage = () => {
 
   const [selectedBabyId, setSelectedBabyId] = useState(null);
 
+  const [tourOpen, setTourOpen] = useState(false);
+
   const [showBabyModal, setShowBabyModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
 
   const hasSubscription = localStorage.getItem("hasSubscription") === "true";
+
   const canAddBaby = hasSubscription || babies.length === 0;
 
   const [babyForm] = Form.useForm();
@@ -85,16 +67,20 @@ const DashboardPage = () => {
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  //modals
-  const [loadingBaby, setLoadingBaby] = useState(false);
-
   // Filtrar eventos por período (1 = hoje, 7, 15, 30 dias)
-  const [filterRange, setFilterRange] = useState(1);
+
   const screens = useBreakpoint();
   const isMobile = !screens.sm;
 
   const isDesktop = screens.md;
 
+  const tourLocale = {
+    ...ptBR,
+    Tour: {
+      ...ptBR.Tour,
+      finish: "Entendi",
+    },
+  };
   const now = new Date();
   // Se plan.naps existir, usamos o end da última soneca para determinar expiração
   const napEnd =
@@ -149,10 +135,32 @@ const DashboardPage = () => {
     }
   }, [selectedBabyId]);
 
+  useEffect(() => {
+    const alreadyShown = localStorage.getItem("tourShown") === "true";
+    const hasNoEvents =
+      selectedBabyId &&
+      events.filter((e) => e.baby_id === selectedBabyId).length === 0;
+
+    if (!alreadyShown && hasNoEvents) {
+      setTourOpen(true);
+      localStorage.setItem("tourShown", "true");
+    }
+  }, [events, selectedBabyId]);
+
   // 1) Seleciona um bebê (atualiza plan & events & history)
   const handleSelectBaby = (babyId) => {
     setSelectedBabyId(babyId);
   };
+
+  const tourSteps = [
+    {
+      title: "Registrar seu primeiro evento",
+      description:
+        "Clique neste ícone de relógio para marcar quando seu bebê dormiu, acordou ou mamou.",
+      target: () => document.querySelector(".clock-tip"),
+      placement: "bottom",
+    },
+  ];
 
   // 2) Abre o modal de evento para o bebê selecionado
   const handleOpenEventModal = (babyId) => {
@@ -253,7 +261,6 @@ const DashboardPage = () => {
       message.error(detail);
     }
   };
-  // ================================================================================
 
   const handleGeneratePlan = async (babyId) => {
     try {
@@ -328,7 +335,6 @@ const DashboardPage = () => {
     }
   };
 
-  // Função auxiliar para calcular a idade (anos e meses)
   // Função auxiliar para calcular idade detalhada
   const calcularIdade = (birthDateString) => {
     const nascimento = dayjs(birthDateString);
@@ -352,470 +358,486 @@ const DashboardPage = () => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Navbar />
-      <Content
-        style={{
-          padding: isDesktop ? 24 : "0px 0px 80px",
-          width: "100%",
-          maxWidth: isDesktop ? 1200 : "100%",
-          marginInline: "auto",
-        }}
-      >
-        {isDesktop && (
-          <>
-            <Title level={2}>Relatório</Title>
-            <Row justify="start" style={{ marginBottom: 24 }}>
-              <Col>
-                <Button
-                  type="primary"
-                  icon={<PlusCircleOutlined />}
-                  size="large"
-                  shape="round"
-                  disabled={!canAddBaby}
-                  onClick={() => {
-                    if (!canAddBaby) {
-                      message.warning(
-                        "Para cadastrar mais de um bebê, você precisa assinar o Plano Plus."
-                      );
-                    } else {
-                      setShowBabyModal(true);
-                    }
-                  }}
-                >
-                  Adicionar seu bebê
-                </Button>
-              </Col>
-            </Row>
-          </>
-        )}
-
-        {/* Lista de cards de bebê */}
-        <Row
-          gutter={isDesktop ? [24, 24] : 0} // desktop: 24px / mobile: 0
-          justify="center"
-          style={{ width: "100%", maxWidth: 1200, margin: "0 auto" }}
+    <>
+      {tourOpen && (
+        <ConfigProvider locale={tourLocale}>
+          <Tour
+            open={tourOpen}
+            onClose={() => setTourOpen(false)}
+            steps={tourSteps}
+          />{" "}
+        </ConfigProvider>
+      )}
+      <Layout style={{ minHeight: "100vh" }}>
+        <Navbar />
+        <Content
+          style={{
+            padding: isDesktop ? 24 : "0px 0px 80px",
+            width: "100%",
+            maxWidth: isDesktop ? 1200 : "100%",
+            marginInline: "auto",
+          }}
         >
-          {babies.map((b) => {
-            const idadeTexto = calcularIdade(b.birth_date);
-            const isSelected = selectedBabyId === b.id;
-            const babyEmoji = b.gender === "male" ? "👦" : "👧";
-            const coverBg =
-              b.gender === "male"
-                ? "linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)"
-                : "linear-gradient(135deg, #fff0f6 0%, #ffd6e7 100%)";
-
-            return (
-              <Col xs={24} key={b.id}>
-                {/* Card do bebê */}
-                <Card
-                  hoverable
-                  onClick={() => handleSelectBaby(b.id)}
-                  bordered={false}
-                  style={{
-                    width: "100%",
-                    borderRadius: 12,
-                    boxShadow: isSelected
-                      ? `0 0 0 2px ${
-                          b.gender === "male"
-                            ? "#1890ff"
-                            : "#ff80bf" /* azul ou rosa */
-                        } inset`
-                      : "0 4px 12px rgba(0,0,0,0.05)",
-                    overflow: "hidden",
-                  }}
-                  cover={
-                    <div
-                      style={{
-                        height: 200,
-                        background: coverBg,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <span style={{ fontSize: 72 }}>{babyEmoji}</span>
-                    </div>
-                  }
-                  bodyStyle={{ padding: 24 }}
-                >
-                  {/* nome + tag continuam iguais */}
-                  <div style={{ textAlign: "center", marginBottom: 16 }}>
-                    <Title level={3} style={{ margin: 0 }}>
-                      {b.name}
-                    </Title>
-                    <Tag color={b.gender === "male" ? "blue" : "magenta"}>
-                      {b.gender === "male" ? "Menino" : "Menina"}
-                    </Tag>
-                  </div>
-
-                  {/* metadados em linha  -------------------------------------------------- */}
-                  {/* metadados em linha – fonte maior, peso 500, alinhamento central */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: 32, // espaço entre itens
-                      flexWrap: "wrap", // quebra no mobile
-                      marginBottom: 12,
+          {isDesktop && (
+            <>
+              <Title level={2}>Relatório</Title>
+              <Row justify="start" style={{ marginBottom: 24 }}>
+                <Col>
+                  <Button
+                    type="primary"
+                    icon={<PlusCircleOutlined />}
+                    size="large"
+                    shape="round"
+                    disabled={!canAddBaby}
+                    onClick={() => {
+                      if (!canAddBaby) {
+                        message.warning(
+                          "Para cadastrar mais de um bebê, você precisa assinar o Plano Plus."
+                        );
+                      } else {
+                        setShowBabyModal(true);
+                      }
                     }}
                   >
-                    <span
-                      style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
+                    Adicionar seu bebê
+                  </Button>
+                </Col>
+              </Row>
+            </>
+          )}
+
+          {/* Lista de cards de bebê */}
+          <Row
+            gutter={isDesktop ? [24, 24] : 0} // desktop: 24px / mobile: 0
+            justify="center"
+            style={{ width: "100%", maxWidth: 1200, margin: "0 auto" }}
+          >
+            {babies.map((b) => {
+              const idadeTexto = calcularIdade(b.birth_date);
+              const isSelected = selectedBabyId === b.id;
+              const babyEmoji = b.gender === "male" ? "👦" : "👧";
+              const coverBg =
+                b.gender === "male"
+                  ? "linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)"
+                  : "linear-gradient(135deg, #fff0f6 0%, #ffd6e7 100%)";
+
+              return (
+                <Col xs={24} key={b.id}>
+                  {/* Card do bebê */}
+                  <Card
+                    hoverable
+                    onClick={() => handleSelectBaby(b.id)}
+                    bordered={false}
+                    style={{
+                      width: "100%",
+                      borderRadius: 12,
+                      boxShadow: isSelected
+                        ? `0 0 0 2px ${
+                            b.gender === "male"
+                              ? "#1890ff"
+                              : "#ff80bf" /* azul ou rosa */
+                          } inset`
+                        : "0 4px 12px rgba(0,0,0,0.05)",
+                      overflow: "hidden",
+                    }}
+                    cover={
+                      <div
+                        style={{
+                          height: 200,
+                          background: coverBg,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <span style={{ fontSize: 72 }}>{babyEmoji}</span>
+                      </div>
+                    }
+                    bodyStyle={{ padding: 24 }}
+                  >
+                    {/* nome + tag continuam iguais */}
+                    <div style={{ textAlign: "center", marginBottom: 16 }}>
+                      <Title level={3} style={{ margin: 0 }}>
+                        {b.name}
+                      </Title>
+                      <Tag color={b.gender === "male" ? "blue" : "magenta"}>
+                        {b.gender === "male" ? "Menino" : "Menina"}
+                      </Tag>
+                    </div>
+
+                    {/* metadados em linha  -------------------------------------------------- */}
+                    {/* metadados em linha – fonte maior, peso 500, alinhamento central */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: 32, // espaço entre itens
+                        flexWrap: "wrap", // quebra no mobile
+                        marginBottom: 12,
+                      }}
                     >
-                      <Text strong>Nascimento:</Text>{" "}
-                      {new Date(b.birth_date).toLocaleDateString("pt-BR")}
-                    </span>
+                      <span
+                        style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
+                      >
+                        <Text strong>Nascimento:</Text>{" "}
+                        {new Date(b.birth_date).toLocaleDateString("pt-BR")}
+                      </span>
 
-                    <span
-                      style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
-                    >
-                      <Text strong>Peso:</Text> {b.birth_weight_grams} g
-                    </span>
+                      <span
+                        style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
+                      >
+                        <Text strong>Peso:</Text> {b.birth_weight_grams} g
+                      </span>
 
-                    <span
-                      style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
-                    >
-                      <Text strong>Idade:</Text> {idadeTexto}
-                    </span>
-                  </div>
+                      <span
+                        style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
+                      >
+                        <Text strong>Idade:</Text> {idadeTexto}
+                      </span>
+                    </div>
 
-                  <div style={{ margin: "16px 0" }}>
-                    {TYPE_OPTIONS.map((opt) => {
-                      /* pega o evento +-recente desse tipo (pode não haver) */
-                      const evtLatest = events
-                        .filter(
-                          (e) => e.baby_id === b.id && e.type === opt.value
-                        )
-                        .sort((a, b) =>
-                          dayjs(b.timestamp).diff(a.timestamp)
-                        )[0];
+                    <div style={{ margin: "16px 0" }}>
+                      {TYPE_OPTIONS.map((opt) => {
+                        /* pega o evento +-recente desse tipo (pode não haver) */
+                        const evtLatest = events
+                          .filter(
+                            (e) => e.baby_id === b.id && e.type === opt.value
+                          )
+                          .sort((a, b) =>
+                            dayjs(b.timestamp).diff(a.timestamp)
+                          )[0];
 
-                      /* dados de display: se não existe, usamos placeholder */
-                      const isPlaceholder = !evtLatest;
-                      const baseTime = evtLatest?.timestamp;
-                      const diffMin = baseTime
-                        ? dayjs().diff(dayjs(baseTime), "minute")
-                        : null;
-                      const hrs =
-                        diffMin !== null ? Math.floor(diffMin / 60) : null;
-                      const mins = diffMin !== null ? diffMin % 60 : null;
-                      const ago =
-                        diffMin !== null
-                          ? `${
-                              hrs ? `${hrs} hr${hrs > 1 ? "s" : ""} ` : ""
-                            }${mins} min atras`
-                          : "—";
+                        /* dados de display: se não existe, usamos placeholder */
+                        const isPlaceholder = !evtLatest;
+                        const baseTime = evtLatest?.timestamp;
+                        const diffMin = baseTime
+                          ? dayjs().diff(dayjs(baseTime), "minute")
+                          : null;
+                        const hrs =
+                          diffMin !== null ? Math.floor(diffMin / 60) : null;
+                        const mins = diffMin !== null ? diffMin % 60 : null;
+                        const ago =
+                          diffMin !== null
+                            ? `${
+                                hrs ? `${hrs} hr${hrs > 1 ? "s" : ""} ` : ""
+                              }${mins} min atras`
+                            : "—";
 
-                      /* segunda linha */
-                      let subtitle = evtLatest?.note || opt.label;
+                        /* segunda linha */
+                        let subtitle = evtLatest?.note || opt.label;
 
-                      if (!evtLatest && opt.value === "sleep_end") {
-                        subtitle = "Ainda não acordou";
-                      }
-                      if (!evtLatest && opt.value === "sleep_start") {
-                        subtitle = "Ainda não dormiu";
-                      }
+                        if (!evtLatest && opt.value === "sleep_end") {
+                          subtitle = "Ainda não acordou";
+                        }
+                        if (!evtLatest && opt.value === "sleep_start") {
+                          subtitle = "Ainda não dormiu";
+                        }
 
-                      /* cores */
-                      const style = ROW_STYLES[opt.value] || {};
+                        /* cores */
+                        const style = ROW_STYLES[opt.value] || {};
 
-                      return (
-                        <div
-                          key={
-                            evtLatest
-                              ? evtLatest.id
-                              : `placeholder-${opt.value}-${b.id}`
-                          }
-                          style={{
-                            ...baseRow,
-                            background: style.bg,
-                            opacity: isPlaceholder
-                              ? 0.55
-                              : 1 /* deixa “fantasma” */,
-                          }}
-                        >
-                          {/* ícone “pill” */}
-                          <span
+                        return (
+                          <div
+                            key={
+                              evtLatest
+                                ? evtLatest.id
+                                : `placeholder-${opt.value}-${b.id}`
+                            }
                             style={{
-                              ...iconPill,
-                              background: style.pillBg,
-                              color: style.pillColor,
+                              ...baseRow,
+                              background: style.bg,
+                              opacity: isPlaceholder
+                                ? 0.55
+                                : 1 /* deixa “fantasma” */,
                             }}
                           >
-                            {opt.icon}
-                          </span>
-                          {/* texto */}
-                          <div style={{ flex: 1 }}>
-                            <div style={titleTxt}>{ago}</div>
-                            <div style={subtitleTxt}>{subtitle}</div>
-                          </div>
-                          {/* divisor */}
-                          <div style={dividerStyle} />
-                          {/* relógio só se já houver evento; placeholder não tem popover */}
-                          <Popover
-                            trigger="click"
-                            content={
-                              <Space>
-                                {/* TimePicker já vem preenchido com agora ou com a hora do evento existente */}
-                                <TimePicker
-                                  defaultValue={dayjs(baseTime || dayjs())}
-                                  format="HH:mm"
-                                  onChange={(_, time) =>
-                                    handleCreateEvent({
-                                      baby_id: b.id,
-                                      type: opt.value,
-                                      timestamp: time, // salva com a hora escolhida
-                                    })
-                                  }
-                                />
-                                {/* botão de ação única: 
+                            {/* ícone “pill” */}
+                            <span
+                              style={{
+                                ...iconPill,
+                                background: style.pillBg,
+                                color: style.pillColor,
+                              }}
+                            >
+                              {opt.icon}
+                            </span>
+                            {/* texto */}
+                            <div style={{ flex: 1 }}>
+                              <div style={titleTxt}>{ago}</div>
+                              <div style={subtitleTxt}>{subtitle}</div>
+                            </div>
+                            {/* divisor */}
+                            <div style={dividerStyle} />
+                            {/* relógio só se já houver evento; placeholder não tem popover */}
+                            <Popover
+                              trigger="click"
+                              content={
+                                <Space>
+                                  {/* TimePicker já vem preenchido com agora ou com a hora do evento existente */}
+                                  <TimePicker
+                                    defaultValue={dayjs(baseTime || dayjs())}
+                                    format="HH:mm"
+                                    onChange={(_, time) =>
+                                      handleCreateEvent({
+                                        baby_id: b.id,
+                                        type: opt.value,
+                                        timestamp: time, // salva com a hora escolhida
+                                      })
+                                    }
+                                  />
+                                  {/* botão de ação única: 
            • “Salvar” quando ainda não existe evento
            • “Agora” quando já existe (mantém comportamento antigo) */}
-                                <Button
-                                  size="small"
-                                  type={isPlaceholder ? "primary" : "default"}
-                                  onClick={() =>
-                                    handleCreateEvent({
-                                      baby_id: b.id,
-                                      type: opt.value,
-                                      timestamp: dayjs(), // salva com hora atual
-                                    })
-                                  }
-                                >
-                                  {isPlaceholder ? "Salvar" : "Agora"}
-                                </Button>
-                              </Space>
-                            }
-                          >
-                            <ClockCircleOutlined
-                              style={{
-                                fontSize: 20,
-                                color: isPlaceholder ? style.pillColor : "#555",
-                                cursor: "pointer",
-                              }}
-                            />
-                          </Popover>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Card>
+                                  <Button
+                                    size="small"
+                                    type={isPlaceholder ? "primary" : "default"}
+                                    onClick={() =>
+                                      handleCreateEvent({
+                                        baby_id: b.id,
+                                        type: opt.value,
+                                        timestamp: dayjs(), // salva com hora atual
+                                      })
+                                    }
+                                  >
+                                    {isPlaceholder ? "Salvar" : "Agora"}
+                                  </Button>
+                                </Space>
+                              }
+                            >
+                              <ClockCircleOutlined
+                                className="clock-tip"
+                                style={{
+                                  fontSize: 20,
+                                  color: isPlaceholder
+                                    ? style.pillColor
+                                    : "#555",
+                                  cursor: "pointer",
+                                }}
+                              />
+                            </Popover>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card>
 
-                {/* Lista de eventos, inline sob o card */}
-              </Col>
-            );
-          })}
-        </Row>
+                  {/* Lista de eventos, inline sob o card */}
+                </Col>
+              );
+            })}
+          </Row>
 
-        {/* Área de exibição do plano de rotina para o bebê selecionado */}
-        <Divider style={{ marginTop: 32 }} />
-        {selectedBabyId && !isPlanExpired && plan ? (
-          <Card
-            style={{
-              backgroundColor: "#ffffff",
-              borderRadius: 12,
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-              marginTop: 24,
-              padding: 24,
-              border: "none",
-            }}
-          >
-            <div
+          {/* Área de exibição do plano de rotina para o bebê selecionado */}
+          <Divider style={{ marginTop: 32 }} />
+          {selectedBabyId && !isPlanExpired && plan ? (
+            <Card
               style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: 16,
+                backgroundColor: "#ffffff",
+                borderRadius: 12,
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+                marginTop: 24,
+                padding: 24,
+                border: "none",
               }}
             >
-              <Text style={{ fontSize: 16, color: "#888", marginRight: 8 }}>
-                Plano de Rotina de
-              </Text>
-              <Title level={4} style={{ margin: 0 }}>
-                {plan.date === new Date().toISOString().slice(0, 10)
-                  ? "Hoje"
-                  : "Amanhã"}
-              </Title>
-            </div>
-
-            <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 16 }}>
-              {/* Próxima Soneca */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  marginBottom: 12,
+                  marginBottom: 16,
                 }}
               >
-                <span
-                  style={{
-                    fontSize: 24,
-                    marginRight: 12,
-                    color: "#555",
-                  }}
-                >
-                  💤
-                </span>
-                <div>
-                  <Text style={{ fontSize: 14, color: "#555" }}>
-                    Próxima Soneca
-                  </Text>
-                  {nextNap ? (
-                    <div style={{ marginTop: 4 }}>
-                      <Title level={5} style={{ margin: 0 }}>
-                        {new Date(nextNap.start).toLocaleTimeString("pt-BR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
-                        –{" "}
-                        {new Date(nextNap.end).toLocaleTimeString("pt-BR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Title>
-                    </div>
-                  ) : (
-                    <Text
-                      type="secondary"
-                      style={{ marginTop: 4, display: "block" }}
-                    >
-                      Nenhuma nova soneca para hoje
-                    </Text>
-                  )}
-                </div>
+                <Text style={{ fontSize: 16, color: "#888", marginRight: 8 }}>
+                  Plano de Rotina de
+                </Text>
+                <Title level={4} style={{ margin: 0 }}>
+                  {plan.date === new Date().toISOString().slice(0, 10)
+                    ? "Hoje"
+                    : "Amanhã"}
+                </Title>
               </div>
 
-              {/* Próxima Mamadeira */}
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <span
+              <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 16 }}>
+                {/* Próxima Soneca */}
+                <div
                   style={{
-                    fontSize: 24,
-                    marginRight: 12,
-                    color: "#555",
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: 12,
                   }}
                 >
-                  🍼
-                </span>
-                <div>
-                  <Text style={{ fontSize: 14, color: "#555" }}>
-                    Próxima Mamadeira
-                  </Text>
-                  {nextFeed ? (
-                    <div style={{ marginTop: 4 }}>
-                      <Title level={5} style={{ margin: 0 }}>
-                        {new Date(nextFeed).toLocaleTimeString("pt-BR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Title>
-                    </div>
-                  ) : (
-                    <Text
-                      type="secondary"
-                      style={{ marginTop: 4, display: "block" }}
-                    >
-                      Nenhuma nova mamadeira para hoje
-                    </Text>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Card>
-        ) : (
-          <div style={{ marginTop: 24, textAlign: "center" }}>
-            <Text
-              type="secondary"
-              style={{ display: "block", marginBottom: 16 }}
-            >
-              {selectedBabyId && plan === null
-                ? "Ainda não há plano de rotina para este bebê."
-                : plan && isPlanExpired
-                ? "O plano de hoje já expirou."
-                : "Selecione um bebê para ver ou gerar o plano."}
-            </Text>
-            {selectedBabyId && (
-              <Button
-                type="primary"
-                onClick={() => handleGeneratePlan(selectedBabyId)}
-              >
-                {plan === null
-                  ? "Gerar Plano para Este Bebê"
-                  : "Gerar Novo Plano"}
-              </Button>
-            )}
-          </div>
-        )}
-        {/* Se estiver carregando o plano, mostra spinner */}
-
-        <Modal
-          title="Registrar Evento"
-          open={showEventModal}
-          onCancel={() => {
-            setShowEventModal(false);
-            eventForm.resetFields();
-            setSelectedType(null);
-          }}
-          onOk={() => eventForm.submit()}
-        >
-          <Form
-            layout="vertical"
-            form={eventForm}
-            onFinish={handleCreateEvent}
-            initialValues={{
-              timestamp: dayjs(),
-            }}
-          >
-            {/* baby_id oculto */}
-            <Form.Item name="baby_id" hidden>
-              <Input type="hidden" />
-            </Form.Item>
-
-            {/* type oculto (sempre definido pelos botões abaixo) */}
-            <Form.Item name="type" hidden>
-              <Input type="hidden" />
-            </Form.Item>
-
-            {/* Botões para escolher o tipo de evento */}
-            <Form.Item
-              label="Tipo de Evento"
-              required
-              validateStatus={!selectedType ? "error" : ""}
-              help={!selectedType ? "Selecione um tipo" : ""}
-            >
-              <Space>
-                {TYPE_OPTIONS.map((opt) => (
-                  <Button
-                    key={opt.value}
-                    type={selectedType === opt.value ? "primary" : "default"}
-                    onClick={() => {
-                      setSelectedType(opt.value);
-                      eventForm.setFieldsValue({ type: opt.value });
+                  <span
+                    style={{
+                      fontSize: 24,
+                      marginRight: 12,
+                      color: "#555",
                     }}
                   >
-                    <span style={{ marginRight: 4 }}>{opt.icon}</span>
-                    {opt.label}
-                  </Button>
-                ))}
-              </Space>
-            </Form.Item>
+                    💤
+                  </span>
+                  <div>
+                    <Text style={{ fontSize: 14, color: "#555" }}>
+                      Próxima Soneca
+                    </Text>
+                    {nextNap ? (
+                      <div style={{ marginTop: 4 }}>
+                        <Title level={5} style={{ margin: 0 }}>
+                          {new Date(nextNap.start).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}{" "}
+                          –{" "}
+                          {new Date(nextNap.end).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </Title>
+                      </div>
+                    ) : (
+                      <Text
+                        type="secondary"
+                        style={{ marginTop: 4, display: "block" }}
+                      >
+                        Nenhuma nova soneca para hoje
+                      </Text>
+                    )}
+                  </div>
+                </div>
 
-            {/* TimePicker: dia fixo (hoje), apenas hora e minuto */}
-            <Form.Item
-              name="timestamp"
-              label="Hora do Evento"
-              rules={[{ required: true, message: "Informe a hora" }]}
+                {/* Próxima Mamadeira */}
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span
+                    style={{
+                      fontSize: 24,
+                      marginRight: 12,
+                      color: "#555",
+                    }}
+                  >
+                    🍼
+                  </span>
+                  <div>
+                    <Text style={{ fontSize: 14, color: "#555" }}>
+                      Próxima Mamadeira
+                    </Text>
+                    {nextFeed ? (
+                      <div style={{ marginTop: 4 }}>
+                        <Title level={5} style={{ margin: 0 }}>
+                          {new Date(nextFeed).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </Title>
+                      </div>
+                    ) : (
+                      <Text
+                        type="secondary"
+                        style={{ marginTop: 4, display: "block" }}
+                      >
+                        Nenhuma nova mamadeira para hoje
+                      </Text>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ) : (
+            <div style={{ marginTop: 24, textAlign: "center" }}>
+              <Text
+                type="secondary"
+                style={{ display: "block", marginBottom: 16 }}
+              >
+                {selectedBabyId && plan === null
+                  ? "Ainda não há plano de rotina para este bebê."
+                  : plan && isPlanExpired
+                  ? "O plano de hoje já expirou."
+                  : "Selecione um bebê para ver ou gerar o plano."}
+              </Text>
+              {selectedBabyId && (
+                <Button
+                  type="primary"
+                  onClick={() => handleGeneratePlan(selectedBabyId)}
+                  // desativa apenas quando estiver no estado "Gerar Plano para Este Bebê"
+                  disabled={plan === null}
+                >
+                  {plan === null
+                    ? "Gerar Plano para Este Bebê"
+                    : "Gerar Novo Plano"}
+                </Button>
+              )}
+            </div>
+          )}
+          {/* Se estiver carregando o plano, mostra spinner */}
+
+          <Modal
+            title="Registrar Evento"
+            open={showEventModal}
+            onCancel={() => {
+              setShowEventModal(false);
+              eventForm.resetFields();
+              setSelectedType(null);
+            }}
+            onOk={() => eventForm.submit()}
+          >
+            <Form
+              layout="vertical"
+              form={eventForm}
+              onFinish={handleCreateEvent}
+              initialValues={{
+                timestamp: dayjs(),
+              }}
             >
-              <TimePicker
-                format="HH:mm"
-                minuteStep={5}
-                style={{ width: "100%" }}
-                defaultValue={dayjs()}
-              />
-            </Form.Item>
-          </Form>
-        </Modal>
-      </Content>
-    </Layout>
+              {/* baby_id oculto */}
+              <Form.Item name="baby_id" hidden>
+                <Input type="hidden" />
+              </Form.Item>
+
+              {/* type oculto (sempre definido pelos botões abaixo) */}
+              <Form.Item name="type" hidden>
+                <Input type="hidden" />
+              </Form.Item>
+
+              {/* Botões para escolher o tipo de evento */}
+              <Form.Item
+                label="Tipo de Evento"
+                required
+                validateStatus={!selectedType ? "error" : ""}
+                help={!selectedType ? "Selecione um tipo" : ""}
+              >
+                <Space>
+                  {TYPE_OPTIONS.map((opt) => (
+                    <Button
+                      key={opt.value}
+                      type={selectedType === opt.value ? "primary" : "default"}
+                      onClick={() => {
+                        setSelectedType(opt.value);
+                        eventForm.setFieldsValue({ type: opt.value });
+                      }}
+                    >
+                      <span style={{ marginRight: 4 }}>{opt.icon}</span>
+                      {opt.label}
+                    </Button>
+                  ))}
+                </Space>
+              </Form.Item>
+
+              {/* TimePicker: dia fixo (hoje), apenas hora e minuto */}
+              <Form.Item
+                name="timestamp"
+                label="Hora do Evento"
+                rules={[{ required: true, message: "Informe a hora" }]}
+              >
+                <TimePicker
+                  format="HH:mm"
+                  minuteStep={5}
+                  style={{ width: "100%" }}
+                  defaultValue={dayjs()}
+                />
+              </Form.Item>
+            </Form>
+          </Modal>
+        </Content>
+      </Layout>
+    </>
   );
 };
 
