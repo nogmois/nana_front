@@ -39,7 +39,10 @@ export default function LoginPage() {
     const token = params.get("token");
     if (token) {
       localStorage.setItem("token", token);
-      navigate("/dashboard");
+      navigate("/dashboard", {
+        replace: true,
+        state: { skipOnboarding: true },
+      });
     }
   }, [location, navigate]);
 
@@ -66,7 +69,10 @@ export default function LoginPage() {
       localStorage.setItem("trialActive", trial_active ? "true" : "false");
       localStorage.setItem("trialEnd", trial_end);
 
-      navigate("/dashboard");
+      navigate("/dashboard", {
+        replace: true,
+        state: { skipOnboarding: true },
+      });
     } catch (err) {
       message.error(err.response?.data?.detail || "Falha no login");
     } finally {

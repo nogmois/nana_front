@@ -35,24 +35,6 @@ export default function OnboardingPage() {
   const selectedGender = Form.useWatch("gender", form);
 
   /* ───────────────────────────────
-     Se já fez onboarding, redireciona
-  ──────────────────────────────── */
-  useEffect(() => {
-    const checkHasBaby = async () => {
-      try {
-        const res = await api.get("/babies/me");
-        if (res.data.length > 0) {
-          // já tem pelo menos um bebê -> vai direto pro dashboard
-          navigate("/dashboard", { replace: true });
-        }
-      } catch (err) {
-        console.error("Erro ao verificar bebês:", err);
-      }
-    };
-    checkHasBaby();
-  }, [navigate]);
-
-  /* ───────────────────────────────
      Salvar bebê
   ──────────────────────────────── */
   const handleCreateBaby = async (values) => {
