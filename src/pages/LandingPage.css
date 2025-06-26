@@ -98,10 +98,24 @@ body {
   right: -200px;
 }
 .attention-title {
-  font-size: clamp(2.25rem, 6vw, 3.5rem);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  max-width: 480px;
+  font-family: "Inter", sans-serif;
+  font-weight: 700; /* peso mais ousado */
+  letter-spacing: -0.02em; /* ajusta o espaçamento */
+  line-height: 1.2; /* um pouco mais de respiro */
+  color: #ffffff; /* branco puro para contraste */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); /* sutil sombra para legibilidade */
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  margin: 0;
+}
+
+/* Cada span vira linha separada */
+.attention-title span {
+  display: block;
+}
+
+/* Destacar uma palavra (opcional) */
+.attention-title .highlight {
+  color: var(--accent-coral);
 }
 .attention-subtitle {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
@@ -123,6 +137,16 @@ body {
 .attention-cta:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+}
+.attention-note {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  font-weight: 500;
+  color: var(--accent-yellow); /* cor de destaque */
+  background: rgba(255, 255, 255, 0.15); /* leve fundo para destacar */
+  border-radius: 999px; /* efeito “pill” */
 }
 .attention-image {
   text-align: center;
@@ -295,6 +319,10 @@ body {
   }
 }
 @media (max-width: 575px) {
+  .attention-title {
+    font-size: clamp(1.75rem, 6vw, 2.25rem);
+    line-height: 0.8;
+  }
   .landing-content > section {
     padding-left: 1.5rem;
     padding-right: 1.5rem;

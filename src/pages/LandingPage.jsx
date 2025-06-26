@@ -148,9 +148,24 @@ export default function LandingPage() {
   return (
     <Layout className="landing-layout">
       <Helmet>
+        {/* JSON-LD */}
         <script type="application/ld+json">
           {JSON.stringify(structuredData)}
         </script>
+
+        {/* Preload do hero image */}
+        <link
+          rel="preload"
+          as="image"
+          href="https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb.webp"
+          imagesrcset="
+            https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb-320.webp   320w,
+            https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb-768.webp   768w,
+            https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb-1200.webp 1200w
+          "
+          sizes="(max-width: 768px) 100vw, 50vw"
+          type="image/webp"
+        />
       </Helmet>
 
       {/* HEADER */}
@@ -203,8 +218,10 @@ export default function LandingPage() {
           <div className="attention-container">
             <Row align="middle" justify="center" gutter={[48, 48]}>
               <Col xs={24} md={12} className="attention-text">
-                <Title level={1} className="attention-title">
-                  Seu bebê dormindo melhor. Você mais tranquila, hoje mesmo.
+                <Title level={2} className="attention-title">
+                  Seu bebê dormindo melhor.
+                  <br />
+                  Você mais tranquila hoje mesmo.
                 </Title>
                 <Paragraph className="attention-subtitle">
                   Teste grátis: receba agora um plano de sono personalizado com
@@ -218,19 +235,22 @@ export default function LandingPage() {
                 >
                   Começar teste grátis agora →
                 </Button>
-                <Text
-                  type="secondary"
-                  style={{ display: "block", marginTop: 8 }}
-                >
+                <span className="attention-note">
                   💡 Válido por tempo limitado.
-                </Text>
+                </span>
               </Col>
               <Col xs={24} md={12} className="attention-image">
                 <Image
-                  src="https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb.png"
+                  src="https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb.webp"
+                  fallback="https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb.png"
                   alt="Bebê dormindo"
                   preview={false}
-                  width="100%"
+                  loading="eager"
+                  style={{ width: "100%", height: "auto" }}
+                  imgProps={{
+                    width: 1024, // atributo HTML para reservar proporção
+                    height: 1024, // atributo HTML para reservar proporção
+                  }}
                 />
               </Col>
             </Row>

@@ -36,11 +36,6 @@ export default function RegisterPage() {
       // 1) cria usuário
       await api.post("/auth/cadastro", { email, password });
 
-      // Dispara o evento de conversão do Google Ads
-      if (window.gtag_report_conversion) {
-        window.gtag_report_conversion();
-      }
-
       // 2) login automático
       const res = await api.post("/auth/login", { email, password });
       const {
@@ -67,7 +62,13 @@ export default function RegisterPage() {
       localStorage.setItem("onboardingComplete", "false");
 
       message.success("Conta criada! Bem-vinda(o) 😉");
-      navigate("/onboarding");
+      // 3) dispara conversão com callback pro onboarding
+      if (window.gtag_report_conversion) {
+        window.gtag_report_conversion("/onboarding");
+      } else {
+        // fallback caso o gtag não carregue por algum motivo
+        navigate("/onboarding");
+      }
     } catch (err) {
       message.error(err.response?.data?.detail || "Falha no cadastro");
     } finally {
