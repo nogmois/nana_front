@@ -22,11 +22,27 @@ import {
   Popover,
   Tour,
   ConfigProvider,
+  Descriptions,
 } from "antd";
 import { PlusCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import Navbar from "../../components/Navbar";
 import api from "../../services/api";
+import BabyCardWithArc from "../../components/BabyCardWithArc";
 import { logout } from "../../utils/auth";
+
+// --- SVG arc helpers ---
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const angleRad = (angleDeg - 90) * (Math.PI / 180);
+  return { x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) };
+}
+
+function describeArc(cx, cy, r, startAngle, endAngle) {
+  const p1 = polarToCartesian(cx, cy, r, endAngle);
+  const p2 = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+  return [`M`, p1.x, p1.y, `A`, r, r, 0, largeArcFlag, 0, p2.x, p2.y].join(` `);
+}
+
 const { Content } = Layout;
 const { Title, Text } = Typography;
 const { useBreakpoint } = Grid;
@@ -405,7 +421,6 @@ const DashboardPage = () => {
               </Row>
             </>
           )}
-
           {/* Lista de cards de bebê */}
           <Row
             gutter={isDesktop ? [24, 24] : 0} // desktop: 24px / mobile: 0
@@ -415,7 +430,31 @@ const DashboardPage = () => {
             {babies.map((b) => {
               const idadeTexto = calcularIdade(b.birth_date);
               const isSelected = selectedBabyId === b.id;
-              const babyEmoji = b.gender === "male" ? "👦" : "👧";
+              // 1) Filtra só os eventos deste bebê
+              const babyEvents = events.filter((e) => e.baby_id === b.id);
+
+              // 2) Pega o último sleep_start e o último sleep_end
+              const lastStart = babyEvents
+                .filter((e) => e.type === "sleep_start")
+                .sort((a, b) => dayjs(b.timestamp).diff(a.timestamp))[0];
+              const lastEnd = babyEvents
+                .filter((e) => e.type === "sleep_end")
+                .sort((a, b) => dayjs(b.timestamp).diff(a.timestamp))[0];
+
+              // 3) Se tiver um start mais recente que o end, considera dormindo
+              const isSleeping =
+                lastStart &&
+                (!lastEnd ||
+                  dayjs(lastStart.timestamp).isAfter(lastEnd.timestamp));
+
+              // 4) Escolhe o emoji: 😴 se dormindo, senão 👦 ou 👧
+              const babyEmoji = isSleeping
+                ? "😴"
+                : b.gender === "male"
+                ? "👦"
+                : "👧";
+
+              // … mantém seu coverBg etc …
               const coverBg =
                 b.gender === "male"
                   ? "linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)"
@@ -443,14 +482,123 @@ const DashboardPage = () => {
                     cover={
                       <div
                         style={{
-                          height: 200,
+                          position: "relative",
+                          height: 280,
+                          marginBottom: 0,
                           background: coverBg,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                         }}
                       >
-                        <span style={{ fontSize: 72 }}>{babyEmoji}</span>
+                        <svg
+                          width={280}
+                          height={280}
+                          style={{ overflow: "visible" }}
+                        >
+                          {/* arco maior e mais grosso */}
+                          <path
+                            d={describeArc(140, 140, 120, 270, 90)}
+                            stroke="#1890ff"
+                            strokeWidth={10}
+                            fill="none"
+                          />
+
+                          {["sleep_start", "sleep_end"]
+                            .map((type) => {
+                              if (type === "sleep_start" && nextNap)
+                                return { time: nextNap.start, icon: "💤" };
+                              if (type === "sleep_end" && nextNap)
+                                return {
+                                  time: nextNap.end,
+                                  icon: "🌞",
+                                  isWake: true,
+                                };
+                              return null;
+                            })
+                            .filter(Boolean)
+                            .map((ev, i, arr) => {
+                              const startA = 270,
+                                endA = 90;
+                              const angle =
+                                startA +
+                                (i * (endA - startA)) / (arr.length - 1 || 1);
+                              const { x, y } = polarToCartesian(
+                                140,
+                                140,
+                                120,
+                                angle
+                              );
+
+                              // círculos um pouco maiores
+                              const r = ev.isWake ? 20 : 16;
+                              const strokeW = ev.isWake ? 5 : 3;
+                              const strokeC = ev.isWake ? "#0050b3" : "#fff";
+                              const fillC = ev.isWake ? "#e6f7ff" : "#fff";
+
+                              // maior espaçamento antes do horário
+                              const marginTopTime = 18; // de 6 para 12px
+                              const yBase = y + r; // base logo abaixo da bolinha
+
+                              return (
+                                <g key={i}>
+                                  <circle
+                                    cx={x}
+                                    cy={y}
+                                    r={r}
+                                    fill={fillC}
+                                    stroke={strokeC}
+                                    strokeWidth={strokeW}
+                                  />
+
+                                  {/* emoji do evento */}
+                                  <text
+                                    x={x}
+                                    y={y + 6}
+                                    textAnchor="middle"
+                                    fontSize={ev.isWake ? 18 : 16}
+                                  >
+                                    {ev.icon}
+                                  </text>
+
+                                  {/* horário sempre abaixo, com espaço maior e em negrito */}
+                                  <text
+                                    x={x}
+                                    y={yBase}
+                                    dy={marginTopTime}
+                                    textAnchor="middle"
+                                    fontSize={14}
+                                    fontWeight="bold"
+                                    fill={ev.isWake ? "#0050b3" : "#333"}
+                                  >
+                                    {dayjs(ev.time).format("HH:mm")}
+                                  </text>
+                                </g>
+                              );
+                            })}
+                        </svg>
+
+                        {/* Emoji central */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            width: 120,
+                            height: 120,
+                            marginTop: -60,
+                            marginLeft: -60,
+                            borderRadius: "50%",
+                            background: "#fff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 64,
+                            boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+                          }}
+                        >
+                          {babyEmoji}
+                        </div>
                       </div>
                     }
                     bodyStyle={{ padding: 24 }}
@@ -467,38 +615,28 @@ const DashboardPage = () => {
 
                     {/* metadados em linha  -------------------------------------------------- */}
                     {/* metadados em linha – fonte maior, peso 500, alinhamento central */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: 32, // espaço entre itens
-                        flexWrap: "wrap", // quebra no mobile
-                        marginBottom: 12,
-                      }}
+                    <Descriptions
+                      column={isMobile ? 1 : 3}
+                      bordered={false}
+                      size="small"
+                      style={{ marginBottom: 12 }}
+                      labelStyle={{ fontWeight: 500, color: "#555" }}
+                      contentStyle={{ color: "#555" }}
                     >
-                      <span
-                        style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
-                      >
-                        <Text strong>Nascimento:</Text>{" "}
+                      <Descriptions.Item label="Nascimento">
                         {new Date(b.birth_date).toLocaleDateString("pt-BR")}
-                      </span>
-
-                      <span
-                        style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
-                      >
-                        <Text strong>Peso:</Text> {b.birth_weight_grams} g
-                      </span>
-
-                      <span
-                        style={{ fontSize: 16, fontWeight: 500, color: "#555" }}
-                      >
-                        <Text strong>Idade:</Text> {idadeTexto}
-                      </span>
-                    </div>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Peso">
+                        {b.birth_weight_grams} g
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Idade">
+                        {idadeTexto}
+                      </Descriptions.Item>
+                    </Descriptions>
 
                     <div style={{ margin: "16px 0" }}>
                       {TYPE_OPTIONS.map((opt) => {
-                        /* pega o evento +-recente desse tipo (pode não haver) */
+                        // pega o evento +-recente deste tipo
                         const evtLatest = events
                           .filter(
                             (e) => e.baby_id === b.id && e.type === opt.value
@@ -507,33 +645,38 @@ const DashboardPage = () => {
                             dayjs(b.timestamp).diff(a.timestamp)
                           )[0];
 
-                        /* dados de display: se não existe, usamos placeholder */
                         const isPlaceholder = !evtLatest;
                         const baseTime = evtLatest?.timestamp;
                         const diffMin = baseTime
                           ? dayjs().diff(dayjs(baseTime), "minute")
                           : null;
-                        const hrs =
-                          diffMin !== null ? Math.floor(diffMin / 60) : null;
-                        const mins = diffMin !== null ? diffMin % 60 : null;
-                        const ago =
-                          diffMin !== null
-                            ? `${
-                                hrs ? `${hrs} hr${hrs > 1 ? "s" : ""} ` : ""
-                              }${mins} min atras`
-                            : "—";
 
-                        /* segunda linha */
+                        //— calcula texto de “há…”
+                        let agoText;
+                        let stale = false;
+                        if (diffMin !== null) {
+                          if (diffMin > 120) {
+                            agoText = "Sem registros nas últimas 2 horas";
+                            stale = true;
+                          } else {
+                            const hrs = Math.floor(diffMin / 60);
+                            const mins = diffMin % 60;
+                            agoText = `${
+                              hrs ? `${hrs} hr${hrs > 1 ? "s" : ""} ` : ""
+                            }${mins} min atrás`;
+                          }
+                        } else {
+                          agoText = "—";
+                        }
+
+                        //— subtítulo
                         let subtitle = evtLatest?.note || opt.label;
-
-                        if (!evtLatest && opt.value === "sleep_end") {
+                        if (!evtLatest && opt.value === "sleep_end")
                           subtitle = "Ainda não acordou";
-                        }
-                        if (!evtLatest && opt.value === "sleep_start") {
+                        if (!evtLatest && opt.value === "sleep_start")
                           subtitle = "Ainda não dormiu";
-                        }
 
-                        /* cores */
+                        //— cores
                         const style = ROW_STYLES[opt.value] || {};
 
                         return (
@@ -541,17 +684,17 @@ const DashboardPage = () => {
                             key={
                               evtLatest
                                 ? evtLatest.id
-                                : `placeholder-${opt.value}-${b.id}`
+                                : `ph-${opt.value}-${b.id}`
                             }
                             style={{
                               ...baseRow,
                               background: style.bg,
-                              opacity: isPlaceholder
-                                ? 0.55
-                                : 1 /* deixa “fantasma” */,
+                              opacity: isPlaceholder ? 0.55 : 1,
+                              alignItems: "center",
+                              display: "flex",
                             }}
                           >
-                            {/* ícone “pill” */}
+                            {/* ícone */}
                             <span
                               style={{
                                 ...iconPill,
@@ -561,60 +704,73 @@ const DashboardPage = () => {
                             >
                               {opt.icon}
                             </span>
+
                             {/* texto */}
-                            <div style={{ flex: 1 }}>
-                              <div style={titleTxt}>{ago}</div>
-                              <div style={subtitleTxt}>{subtitle}</div>
+                            <div style={{ flex: 1, padding: "4px 0" }}>
+                              {/* horário / mensagem */}
+                              <Text
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 500,
+                                  marginBottom: 2,
+                                  color: stale ? "#999" : "#333",
+                                  display: "block",
+                                }}
+                              >
+                                {agoText}
+                              </Text>
+                              {/* subtítulo */}
+                              <Text style={{ fontSize: 12, color: "#666" }}>
+                                {subtitle}
+                              </Text>
                             </div>
+
                             {/* divisor */}
                             <div style={dividerStyle} />
-                            {/* relógio só se já houver evento; placeholder não tem popover */}
-                            <Popover
-                              trigger="click"
-                              content={
-                                <Space>
-                                  {/* TimePicker já vem preenchido com agora ou com a hora do evento existente */}
-                                  <TimePicker
-                                    defaultValue={dayjs(baseTime || dayjs())}
-                                    format="HH:mm"
-                                    onChange={(_, time) =>
-                                      handleCreateEvent({
-                                        baby_id: b.id,
-                                        type: opt.value,
-                                        timestamp: time, // salva com a hora escolhida
-                                      })
-                                    }
-                                  />
-                                  {/* botão de ação única: 
-           • “Salvar” quando ainda não existe evento
-           • “Agora” quando já existe (mantém comportamento antigo) */}
-                                  <Button
-                                    size="small"
-                                    type={isPlaceholder ? "primary" : "default"}
-                                    onClick={() =>
-                                      handleCreateEvent({
-                                        baby_id: b.id,
-                                        type: opt.value,
-                                        timestamp: dayjs(), // salva com hora atual
-                                      })
-                                    }
-                                  >
-                                    {isPlaceholder ? "Salvar" : "Agora"}
-                                  </Button>
-                                </Space>
-                              }
-                            >
-                              <ClockCircleOutlined
-                                className="clock-tip"
-                                style={{
-                                  fontSize: 20,
-                                  color: isPlaceholder
-                                    ? style.pillColor
-                                    : "#555",
-                                  cursor: "pointer",
-                                }}
-                              />
-                            </Popover>
+
+                            {/* relógio */}
+                            {!isPlaceholder && (
+                              <Popover
+                                trigger="click"
+                                content={
+                                  <Space>
+                                    <TimePicker
+                                      defaultValue={dayjs(baseTime || dayjs())}
+                                      format="HH:mm"
+                                      onChange={(_, time) =>
+                                        handleCreateEvent({
+                                          baby_id: b.id,
+                                          type: opt.value,
+                                          timestamp: time,
+                                        })
+                                      }
+                                    />
+                                    <Button
+                                      size="small"
+                                      type="default"
+                                      onClick={() =>
+                                        handleCreateEvent({
+                                          baby_id: b.id,
+                                          type: opt.value,
+                                          timestamp: dayjs(),
+                                        })
+                                      }
+                                    >
+                                      Agora
+                                    </Button>
+                                  </Space>
+                                }
+                              >
+                                <ClockCircleOutlined
+                                  className="clock-tip"
+                                  style={{
+                                    fontSize: 20,
+                                    color: style.pillColor,
+                                    cursor: "pointer",
+                                  }}
+                                />
+                              </Popover>
+                            )}
                           </div>
                         );
                       })}
@@ -626,8 +782,7 @@ const DashboardPage = () => {
               );
             })}
           </Row>
-
-          {/* Área de exibição do plano de rotina para o bebê selecionado */}
+          {/* Área de exibição do plano de rotina para o bebê selecionado 
           <Divider style={{ marginTop: 32 }} />
           {selectedBabyId && !isPlanExpired && plan ? (
             <Card
@@ -658,7 +813,7 @@ const DashboardPage = () => {
               </div>
 
               <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 16 }}>
-                {/* Próxima Soneca */}
+                {/* Próxima Soneca 
                 <div
                   style={{
                     display: "flex",
@@ -704,7 +859,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                {/* Próxima Mamadeira */}
+                {/* Próxima Mamadeira 
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <span
                     style={{
@@ -767,7 +922,6 @@ const DashboardPage = () => {
             </div>
           )}
           {/* Se estiver carregando o plano, mostra spinner */}
-
           <Modal
             title="Registrar Evento"
             open={showEventModal}
