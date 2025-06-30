@@ -1,7 +1,5 @@
-/* 1) Importa Inter (400, 500, 600, 700) */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* Paleta e variáveis */
 :root {
   --primary-color: #5b8def;
   --accent-coral: #ff6b81;
@@ -12,25 +10,23 @@
   --wave-height: 100px;
 }
 
-/* Reset e layout geral */
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
 }
+
 .landing-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background: var(--bg-light);
-  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Inter", sans-serif;
   color: var(--text-dark);
-  line-height: 1.6;
-  overflow-x: hidden;
 }
 
-/* Header */
+/* HEADER */
 .landing-header {
   background: var(--bg-white);
   padding: 1rem 2rem;
@@ -42,303 +38,300 @@ body {
   z-index: 100;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
-.landing-header .logo {
+.logo {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--primary-color);
 }
 .btn-login {
-  color: var(--text-dark);
   font-weight: 500;
 }
+/* cor e peso diferente para trechos marcados */
 .btn-register {
   background: var(--accent-coral) !important;
-  color: var(--bg-white) !important;
+  color: #fff !important;
   border-radius: 32px;
   padding: 0.75rem 1.5rem;
   font-weight: 600;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: 0.3s;
 }
 .btn-register:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
 }
 
+.attention-note-pill {
+  display: block; /* block para poder controlar largura */
+  width: 100%; /* ocupa toda a linha */
+  max-width: 320px; /* limita o tamanho máximo */
+  margin: 1rem auto 0; /* centraliza e distancia do botão */
+  padding: 0.5rem 1rem; /* padding consistente */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  font-weight: 500;
+  color: #fff;
+  text-align: center; /* texto centralizado */
+  backdrop-filter: blur(4px);
+}
+
+/* Ajustes extras só para mobile (pode mexer no break-point conforme seu design) */
+@media (max-width: 575px) {
+  .attention-note-pill {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+    backdrop-filter: none; /* remove blur no mobile se for pesado */
+  }
+  .attention-note-pill strong {
+    color: var(--accent-green);
+  }
+}
+
 /* HERO */
 .attention-section {
   position: relative;
-  background: linear-gradient(135deg, var(--primary-color) 0%, #8eaefe 100%);
-  color: var(--bg-white);
+  background: linear-gradient(135deg, var(--primary-color), #8eaefe);
+  color: #fff;
   clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
   padding: 6rem 2rem 8rem;
-  overflow: hidden;
 }
 .attention-container {
   max-width: 1200px;
   margin: 0 auto;
 }
-.attention-section::before,
-.attention-section::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-}
-.attention-section::before {
-  width: 500px;
-  height: 500px;
-  top: -200px;
-  left: -150px;
-}
-.attention-section::after {
-  width: 700px;
-  height: 700px;
-  bottom: -300px;
-  right: -200px;
-}
 .attention-title {
-  font-family: "Inter", sans-serif;
-  font-weight: 700; /* peso mais ousado */
-  letter-spacing: -0.02em; /* ajusta o espaçamento */
-  line-height: 1.2; /* um pouco mais de respiro */
-  color: #ffffff; /* branco puro para contraste */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); /* sutil sombra para legibilidade */
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   font-size: clamp(1.75rem, 4vw, 2.5rem);
-  margin: 0;
-}
-
-/* Cada span vira linha separada */
-.attention-title span {
-  display: block;
-}
-
-/* Destacar uma palavra (opcional) */
-.attention-title .highlight {
-  color: var(--accent-coral);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 }
 .attention-subtitle {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
   margin-top: 1rem;
   max-width: 500px;
-  color: rgba(255, 255, 255, 0.9);
 }
-.attention-cta {
+/* Rotator */
+.highlight-text {
+  display: inline-block; /* inline-block só envolve o conteúdo */
+  background: var(--accent-coral);
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 1rem; /* afasta do botão abaixo */
+}
+
+/* Form */
+.hero-form {
   margin-top: 2rem;
-  padding: 0.9rem 2.5rem !important;
-  font-size: 1.125rem !important;
-  font-weight: 600 !important;
-  border-radius: 32px !important;
-  background: var(--accent-coral) !important;
-  color: var(--bg-white) !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  transition: transform 0.3s, box-shadow 0.3s;
 }
-.attention-cta:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+.hero-form .ant-form-item {
+  margin-right: 0.5rem;
 }
+.hero-form .ant-form-item:last-child {
+  margin-right: 0;
+}
+
 .attention-note {
-  display: inline-block;
+  display: block;
   margin-top: 0.75rem;
-  padding: 0.25rem 0.75rem;
-  font-size: clamp(0.875rem, 2.5vw, 1rem);
   font-weight: 500;
-  color: var(--accent-yellow); /* cor de destaque */
-  background: rgba(255, 255, 255, 0.15); /* leve fundo para destacar */
-  border-radius: 999px; /* efeito “pill” */
 }
 .attention-image {
-  text-align: center;
   margin-top: 2rem;
 }
-/* onda ao final do hero */
 .attention-wave {
   position: absolute;
   bottom: -1px;
   left: 0;
   width: 100%;
   height: var(--wave-height);
-  background: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'>\
-<path fill='%23fdfaff' d='M0,224L48,218.7C96,213,192,203,288,197.3C384,192,480,192,576,170.7C672,149,768,107,864,90.7C960,75,1056,85,1152,96C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'></path>\
-</svg>")
-    no-repeat bottom;
+  background: url("data:image/svg+xml;utf8,<svg…></svg>") no-repeat bottom;
   background-size: cover;
+}
+
+/* espaçamento extra para títulos no mobile */
+@media (max-width: 575px) {
+  .attention-title,
+  .section-title {
+    margin-top: 2rem !important;
+  }
+}
+
+/* REAL QUESTIONS */
+.real-questions-section {
+  background: var(--bg-white);
+  text-align: center;
+  padding: 3rem 1rem;
+}
+.real-questions-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.real-questions-list li {
+  background: #fff;
+  color: var(--text-dark);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.real-questions-list li::before {
+  content: "💬 ";
 }
 
 /* FEATURES */
 .features-section {
   background: var(--bg-light);
+  padding: 4rem 2rem;
 }
 .section-title {
   font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 700;
   margin-bottom: 2rem;
   text-align: center;
-  color: var(--text-dark);
 }
-
-/* Feature cards */
 .feature-card-upgraded {
-  background: var(--bg-white);
+  background: #fff;
   border-radius: 20px;
   padding: 2rem 1.5rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: 0.3s;
 }
 .feature-card-upgraded:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 }
-.feature-icon-wrapper {
-  background: rgba(255, 107, 129, 0.1);
-}
 .feature-icon-large {
+  font-size: 1.5rem;
   color: var(--accent-coral);
 }
 .feature-text-upgraded {
-  color: var(--text-dark);
-}
-
-/* PLATFORM PREVIEW */
-.platform-section {
-  background: var(--bg-white);
-}
-.platform-subtitle {
-  max-width: 600px;
-  margin: 0 auto 2rem;
-  opacity: 0.9;
-}
-.platform-card-wrapper {
-  border-radius: 24px;
-  overflow: hidden;
-  padding: 1.5rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-.platform-card-wrapper:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.14);
+  display: block;
+  margin-top: 1rem;
+  font-weight: 500;
 }
 
 /* HOW IT WORKS */
 .how-it-works-section {
   background: var(--bg-light);
+  padding: 4rem 2rem;
+  text-align: center;
 }
-.how-card {
-  border-radius: 20px;
-  padding: 2rem 1.5rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s, box-shadow 0.3s;
+.how-list {
+  list-style: decimal inside;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
 }
-.how-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+.how-cta {
+  background: var(--accent-coral) !important;
+  color: #fff !important;
+  border-radius: 32px !important;
+  padding: 0.9rem 2.5rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transition: 0.3s;
+}
+.how-cta:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
 }
 
 /* TESTIMONIALS */
 .testimonials-section {
-  background: var(--bg-white);
+  background: #fff;
+  padding: 4rem 2rem;
 }
 .testimonial-card {
   background: var(--bg-light);
   border-left: 4px solid var(--primary-color);
   font-style: italic;
-  padding: 2rem 1.5rem;
-}
-.testimonial-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  padding: 2rem;
+  margin-bottom: 1rem;
 }
 .testimonial-text {
-  color: var(--text-dark);
+  margin-bottom: 1rem;
 }
 .testimonial-author {
-  color: var(--accent-coral);
   font-weight: 600;
+  color: var(--accent-coral);
 }
 
 /* FAQ */
 .faq-section {
   background: var(--bg-light);
+  padding: 4rem 2rem;
+  text-align: center;
 }
 .faq-section .ant-card {
   border-radius: 12px;
-  padding: 2rem 1.5rem;
+  padding: 2rem;
+  margin-bottom: 1rem;
 }
 
-/* FINAL CTA */
-.action-section {
-  background: var(--accent-coral);
-  color: var(--bg-white);
-}
-.action-subtitle {
-  max-width: 600px;
-  margin: 1rem auto 2rem;
-  opacity: 0.9;
-}
-.action-cta {
-  background: var(--bg-white) !important;
-  color: var(--accent-coral) !important;
-  border-radius: 32px;
-  padding: 0.9rem 2.5rem !important;
-  font-size: 1.125rem !important;
-  font-weight: 600 !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-.action-cta:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
-}
-
-/* Footer */
+/* FOOTER */
 .landing-footer {
   background: var(--bg-white);
   text-align: center;
-  padding: 2rem 0;
+  padding: 2rem 1rem;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
-  color: var(--text-dark);
-  font-size: 0.875rem;
+}
+.footer-guarantee {
+  margin: 0.5rem 0;
+  font-weight: 500;
+  color: var(--accent-green);
+}
+/* —— Diminui o “gutter” vertical entre sections —— */
+.landing-content > section {
+  /* antes: padding: Xrem; agora mais enxuto */
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+  /* opcional: dá um espacinho mínimo entre elas */
+  margin-bottom: 1rem !important;
 }
 
-/* -------------------------------------------------- */
-/* Ajustes de espaçamento extra                      */
-/* -------------------------------------------------- */
-/* Espaço entre seções */
-.landing-content > section {
-  margin-bottom: 4rem;
-}
-/* Gutter extra para desktop/mobile */
-@media (min-width: 576px) {
-  .landing-content > section {
-    padding-left: 3rem;
-    padding-right: 3rem;
-  }
-}
 @media (max-width: 575px) {
-  .attention-title {
-    font-size: clamp(1.75rem, 6vw, 2.25rem);
-    line-height: 0.8;
-  }
   .landing-content > section {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    margin-bottom: 3rem;
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
   }
 }
-/* Slide padding extra */
-.swiper-slide {
-  padding: 0 1rem;
+
+.platform-section {
+  background: var(--bg-white);
+  padding: 2rem 1.5rem;
+  text-align: center;
 }
-/* Final CTA mais alto */
-.final-cta-section {
-  padding-top: 6rem !important;
-  padding-bottom: 6rem !important;
+.platform-subtitle {
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+  color: rgba(0, 0, 0, 0.7);
 }
-/* Títulos com mais espaço */
-.section-title {
-  margin-bottom: 2.5rem !important;
+.platform-card-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  transition: transform 0.3s;
+}
+.platform-card-wrapper:hover {
+  transform: translateY(-4px);
+}
+.platform-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.platform-text {
+  display: block;
+  margin-top: 0.75rem;
+  font-weight: 500;
 }

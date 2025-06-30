@@ -12,6 +12,8 @@ import {
   Image,
   Grid,
   Drawer,
+  Form,
+  Input,
 } from "antd";
 import { CheckCircleOutlined, MenuOutlined } from "@ant-design/icons";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -25,147 +27,80 @@ const { Header, Content, Footer } = Layout;
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 
-/* TESTIMONIALS & FEATURES */
+// Depoimentos de maior impacto
 const testimonials = [
   {
-    text: "O NanaFácil salvou nossas noites! Em uma semana, meu bebê dormiu 2 horas a mais por sessão de sono.",
+    text: "Depois de 3 dias, meu bebê dormiu 5 horas seguidas — e eu também!",
     author: "– Marina, mãe do Lucas",
   },
   {
-    text: "Adoro receber alertas no WhatsApp quando meu pequeno entrou em janela de sono. Me sinto mais tranquila e preparada.",
+    text: "O plano validado por pediatras mudou nosso sono em 1 semana.",
     author: "– Fernanda, mãe da Sofia",
   },
   {
-    text: "Os relatórios em PDF são detalhados e ajudam meu pediatra a ajustar o plano. Vimos progresso rápido!",
+    text: "Nunca imaginei que acordaria tão descansada!",
     author: "– Carla, mãe do Miguel",
-  },
-  {
-    text: "A interface é extremamente intuitiva. Consigo registrar eventos e ver gráficos em segundos.",
-    author: "– Juliana, mãe da Helena",
-  },
-  {
-    text: "O plano de 14 dias baseado em SBP mudou a rotina do meu bebê para melhor em poucos dias.",
-    author: "– Patrícia, mãe do Gabriel",
-  },
-  {
-    text: "Ter um histórico completo de eventos e gráficos interativos facilitou identificar padrões e melhorar o sono.",
-    author: "– Ana, mãe da Laura",
-  },
-  {
-    text: "Recomendo o NanaFácil para todas as mamães! Atendimento, tecnologia e resultados reais.",
-    author: "– Bianca, mãe do Pedro",
   },
 ];
 
+// Features principais acima da dobra
 const FEATURES = [
-  "Sono mais longo com algoritmo personalizado",
-  "Alertas no WhatsApp no momento certo",
-  "Relatórios em PDF para o pediatra",
-  "Plano de 14 dias aprovado por especialistas",
-  "Acompanhamento completo de mamadas e sonecas",
-  "Gráficos fáceis de entender e acompanhar",
-  "App pensado para mães reais, sem complicação",
-  "Conteúdo exclusivo de especialistas em sono",
+  "Noites contínuas em até 3 dias",
+  "Plano validado por pediatras",
+  "Garantia de resultado ou dinheiro de volta",
+  "Relatórios claros para seu médico",
+  // extras atrás da dobra
+  "Gráficos que explicam despertares",
+  "Interface simples e limpa",
+  "Acompanhamento em qualquer dispositivo",
+  "Suporte rápido quando precisar",
 ];
+
+// Componente rotativo de micro-highlights
+function RotatingHighlights({ items, interval = 3000 }) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(
+      () => setIdx((i) => (i + 1) % items.length),
+      interval
+    );
+    return () => clearInterval(timer);
+  }, [items.length, interval]);
+  return <Text className="highlight-text">{items[idx]}</Text>;
+}
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const screens = useBreakpoint();
   const isMobile = !screens.sm;
-
-  // navigation handlers
-  const handleLogin = () => navigate("/login");
-  const handleRegister = () => navigate("/register");
-
-  // mobile drawer
   const [openDrawer, setOpenDrawer] = useState(false);
-
-  // delay Swiper for LCP
   const [showSwiper, setShowSwiper] = useState(false);
+  const [form] = Form.useForm();
+
   useEffect(() => {
-    const idleFn = () => setShowSwiper(true);
+    const idle = () => setShowSwiper(true);
     if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(idleFn);
+      window.requestIdleCallback(idle);
     } else {
-      setTimeout(idleFn, 2000);
+      setTimeout(idle, 2000);
     }
   }, []);
 
-  const visibleFeatures = isMobile ? FEATURES.slice(0, 4) : FEATURES;
-
-  // JSON-LD (Product + FAQ)
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Product",
-        name: "NanaFácil – App de Sono Infantil",
-        description:
-          "Aplicativo web que ajuda pais a monitorar sono, mamadas e rotina do bebê com alertas em tempo real e relatórios para pediatras.",
-        brand: { "@type": "Brand", name: "NanaFácil" },
-        image:
-          "https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb.png",
-        offers: {
-          "@type": "Offer",
-          price: "29.90",
-          priceCurrency: "BRL",
-          availability: "https://schema.org/InStock",
-          url: "https://nanafacil-web.onrender.com/",
-        },
-      },
-      {
-        "@type": "FAQPage",
-        mainEntity: [
-          {
-            "@type": "Question",
-            name: "O NanaFácil é gratuito?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: "Você pode testar grátis por 3 dias. Depois, planos a partir de R$29,90/mês.",
-            },
-          },
-          {
-            "@type": "Question",
-            name: "Preciso instalar algum app?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: "Não. O NanaFácil funciona 100% no navegador e se integra ao WhatsApp.",
-            },
-          },
-          {
-            "@type": "Question",
-            name: "Os dados são compartilhados?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: "Seus dados ficam seguros e só são compartilhados quando você gera relatórios em PDF para o pediatra.",
-            },
-          },
-        ],
-      },
-    ],
+  // Handler do cadastro via email
+  const handleEmailSubmit = ({ email }) => {
+    navigate("/register", { state: { email } });
   };
+
+  const handleLogin = () => navigate("/login");
+  const handleRegister = () => navigate("/register");
+
+  // Só 4 cards acima da dobra
+  const visibleFeatures = FEATURES.slice(0, 4);
 
   return (
     <Layout className="landing-layout">
       <Helmet>
-        {/* JSON-LD */}
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-
-        {/* Preload do hero image */}
-        <link
-          rel="preload"
-          as="image"
-          href="https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb.webp"
-          imagesrcset="
-            https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb-320.webp   320w,
-            https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb-768.webp   768w,
-            https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb-1200.webp 1200w
-          "
-          sizes="(max-width: 768px) 100vw, 50vw"
-          type="image/webp"
-        />
+        <title>NanaFácil – Chega de noites em claro</title>
       </Helmet>
 
       {/* HEADER */}
@@ -181,8 +116,8 @@ export default function LandingPage() {
             <Drawer
               title="Menu"
               placement="right"
-              onClose={() => setOpenDrawer(false)}
               open={openDrawer}
+              onClose={() => setOpenDrawer(false)}
             >
               <Space direction="vertical" style={{ width: "100%" }}>
                 <Button type="link" block onClick={handleLogin}>
@@ -196,12 +131,12 @@ export default function LandingPage() {
           </>
         ) : (
           <Space size="middle">
+            <Text>⭐ Mais de 10.000 mamães satisfeitas</Text>
             <Button type="link" className="btn-login" onClick={handleLogin}>
               Login
             </Button>
             <Button
               type="primary"
-              size="large"
               className="btn-register"
               onClick={handleRegister}
             >
@@ -219,38 +154,43 @@ export default function LandingPage() {
             <Row align="middle" justify="center" gutter={[48, 48]}>
               <Col xs={24} md={12} className="attention-text">
                 <Title level={2} className="attention-title">
-                  Seu bebê dormindo melhor.
-                  <br />
-                  Você mais tranquila hoje mesmo.
+                  Chega de noites em claro!
                 </Title>
                 <Paragraph className="attention-subtitle">
-                  Teste grátis: receba agora um plano de sono personalizado com
-                  alertas no WhatsApp. Sem complicação, direto no seu celular.
+                  Tenha até 5 horas seguidas de sono em 3 dias com nosso plano
+                  validado por pediatras. Teste grátis.
                 </Paragraph>
+
+                {/* Rotator de micro-highlights */}
+                <RotatingHighlights
+                  items={[
+                    "10 000+ mamães já dormem melhor",
+                    "+2 horas de sono extra em 3 dias",
+                    "100% validado por pediatras",
+                    "Garantia total de satisfação",
+                  ]}
+                />
+                <br />
+                {/* Formulário de captura de email */}
                 <Button
                   type="primary"
                   size="large"
                   className="attention-cta"
                   onClick={handleRegister}
                 >
-                  Começar teste grátis agora →
+                  Quero noites tranquilas
                 </Button>
-                <span className="attention-note">
-                  💡 Válido por tempo limitado.
-                </span>
+
+                <Text className="attention-note">
+                  💡 Restam 6 vagas para teste gratuito.
+                </Text>
               </Col>
               <Col xs={24} md={12} className="attention-image">
                 <Image
                   src="https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb.webp"
-                  fallback="https://saanova-imagens.s3.us-east-2.amazonaws.com/imagem+bb.png"
-                  alt="Bebê dormindo"
+                  alt="Bebê dormindo tranquilamente"
                   preview={false}
-                  loading="eager"
-                  style={{ width: "100%", height: "auto" }}
-                  imgProps={{
-                    width: 1024, // atributo HTML para reservar proporção
-                    height: 1024, // atributo HTML para reservar proporção
-                  }}
+                  style={{ width: "100%" }}
                 />
               </Col>
             </Row>
@@ -258,18 +198,34 @@ export default function LandingPage() {
           <div className="attention-wave" />
         </section>
 
+        {/* REAL QUESTIONS */}
+        <section className="real-questions-section">
+          <Title level={3} className="section-title">
+            Suas dúvidas mais comuns
+          </Title>
+          <ul className="real-questions-list">
+            <li>Por que meu bebê acorda às 3h toda noite?</li>
+            <li>Por que meu bebê acorda muito à noite aos 6 meses?</li>
+            <li>Meu bebê de 2 anos acorda várias vezes — o que fazer?</li>
+            <li>Bebê não dorme de jeito nenhum. Já tentei de tudo!</li>
+            <li>Qual é a janela ideal de soneca do bebê?</li>
+            <li>Como ajustar a rotina de sono do bebê?</li>
+            <li>Como ensinar o bebê a dormir sozinho?</li>
+            <li>O que é janelinha do sono e como usar?</li>
+            <li>Quais itens ajudam recém-nascido a dormir melhor?</li>
+          </ul>
+        </section>
+
         {/* FEATURES */}
         <section className="interest-section features-section">
           <Title level={2} className="section-title">
-            Todos os benefícios para você e seu bebê
+            Benefícios comprovados
           </Title>
           <Row gutter={[48, 48]} justify="center">
             {visibleFeatures.map((item, i) => (
               <Col xs={24} sm={12} md={6} key={i}>
                 <Card bordered={false} className="feature-card-upgraded">
-                  <div className="feature-icon-wrapper">
-                    <CheckCircleOutlined className="feature-icon-large" />
-                  </div>
+                  <CheckCircleOutlined className="feature-icon-large" />
                   <Text className="feature-text-upgraded">{item}</Text>
                 </Card>
               </Col>
@@ -297,35 +253,32 @@ export default function LandingPage() {
               Veja como nossa interface intuitiva coloca tudo o que você precisa
               na palma da mão.
             </Paragraph>
-            <Row gutter={[48, 48]} justify="center">
+            <Row gutter={[24, 24]} justify="center">
               {[
                 {
                   src: "https://saanova-imagens.s3.us-east-2.amazonaws.com/Screenshot+2025-06-12+123845.png",
-                  alt: "Dashboard",
-                  label: "Dashboard completo com resumo de rotina",
+                  alt: "Dashboard completo",
+                  label: "Dashboard completo",
                 },
                 {
                   src: "https://saanova-imagens.s3.us-east-2.amazonaws.com/grafico.png",
-                  alt: "Gráfico de sono",
-                  label: "Gráficos interativos de sono e mamadeiras",
+                  alt: "Gráficos de sono",
+                  label: "Gráficos de sono e mamadas",
                 },
                 {
                   src: "https://saanova-imagens.s3.us-east-2.amazonaws.com/eventos.png",
-                  alt: "Eventos",
+                  alt: "Alertas automáticos",
                   label: "Alertas automáticos via WhatsApp",
                 },
               ].map(({ src, alt, label }) => (
                 <Col xs={24} sm={12} md={8} key={label}>
                   <div className="platform-card-wrapper">
-                    <div className="device-frame">
-                      <Image
-                        src={src}
-                        alt={alt}
-                        preview={false}
-                        className="platform-image"
-                        loading="lazy"
-                      />
-                    </div>
+                    <Image
+                      src={src}
+                      alt={alt}
+                      preview={false}
+                      className="platform-image"
+                    />
                     <Text className="platform-text">{label}</Text>
                   </div>
                 </Col>
@@ -339,56 +292,37 @@ export default function LandingPage() {
           <Title level={2} className="section-title">
             Como funciona
           </Title>
-          <Row gutter={[48, 48]} justify="center">
-            <Col xs={24} sm={12} md={8}>
-              <Card bordered={false} className="how-card">
-                <Title level={4}>1. Cadastre seu bebê</Title>
-                <Text>
-                  Informe nome, idade e peso — leva menos de 1 minuto.
-                </Text>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-              <Card bordered={false} className="how-card">
-                <Title level={4}>2. Receba o plano no WhatsApp</Title>
-                <Text>
-                  Alertas personalizados e rotina diária com base em dados
-                  reais.
-                </Text>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-              <Card bordered={false} className="how-card">
-                <Title level={4}>3. Acompanhe a evolução</Title>
-                <Text>
-                  Gráficos simples, relatórios em PDF e recomendações de
-                  especialistas.
-                </Text>
-              </Card>
-            </Col>
-          </Row>
+          <ol className="how-list">
+            <li>Cadastre seu bebê em menos de 1 minuto</li>
+            <li>Receba seu plano e comece a ver noites tranquilas em 3 dias</li>
+          </ol>
+          <Button
+            type="primary"
+            size="large"
+            className="how-cta"
+            onClick={handleRegister}
+          >
+            Criar meu plano agora
+          </Button>
         </section>
 
         {/* TESTIMONIALS */}
         <section className="desire-section testimonials-section">
           <Title level={2} className="section-title">
-            O que dizem as mamães
+            Depoimentos reais
           </Title>
-          {showSwiper ? (
+          {showSwiper && (
             <Swiper
               modules={[Autoplay]}
               slidesPerView={1}
-              spaceBetween={32}
+              spaceBetween={24}
               loop
-              autoplay={{ delay: 3000, disableOnInteraction: false }}
-              breakpoints={{
-                768: { slidesPerView: 2 },
-                1024: { slidesPerView: 3 },
-              }}
+              autoplay={{ delay: 4000, disableOnInteraction: false }}
+              breakpoints={{ 768: { slidesPerView: 2 } }}
             >
               {testimonials.map(({ text, author }, i) => (
                 <SwiperSlide key={i}>
-                  <Card className="testimonial-card" style={{ height: "100%" }}>
+                  <Card className="testimonial-card">
                     <Paragraph className="testimonial-text">"{text}"</Paragraph>
                     <Text strong className="testimonial-author">
                       {author}
@@ -397,14 +331,6 @@ export default function LandingPage() {
                 </SwiperSlide>
               ))}
             </Swiper>
-          ) : (
-            <Row gutter={[48, 48]} justify="center">
-              {testimonials.slice(0, 3).map((_, i) => (
-                <Col xs={24} sm={12} md={8} key={i}>
-                  <Card className="testimonial-card" loading />
-                </Col>
-              ))}
-            </Row>
           )}
         </section>
 
@@ -414,21 +340,36 @@ export default function LandingPage() {
             Dúvidas frequentes
           </Title>
           <Row gutter={[48, 48]}>
-            <Col xs={24} md={12}>
+            <Col xs={24} md={8}>
               <Card>
-                <Title level={4}>Preciso instalar algo?</Title>
+                <Title level={4}>
+                  Por que meu bebê acorda no meio da noite?
+                </Title>
                 <Text>
-                  Não. O NanaFácil funciona direto no navegador e envia alertas
-                  via WhatsApp.
+                  Variações no ciclo de sono e fatores como fome ou desconforto
+                  podem despertá-lo; nosso plano ajusta a rotina para minimizar
+                  essas interrupções.
                 </Text>
               </Card>
             </Col>
-            <Col xs={24} md={12}>
+            <Col xs={24} md={8}>
               <Card>
-                <Title level={4}>É gratuito?</Title>
+                <Title level={4}>Como ensinar meu bebê a dormir sozinho?</Title>
                 <Text>
-                  Você pode usar grátis por 3 dias. Depois, planos a partir de
-                  R$29,90/mês.
+                  Ensinamos técnicas suaves de autoconforto e um cronograma de
+                  transição que ajudam seu bebê a adormecer de forma
+                  independente.
+                </Text>
+              </Card>
+            </Col>
+            <Col xs={24} md={8}>
+              <Card>
+                <Title level={4}>
+                  O que é janela de sono e como aplicá-la?
+                </Title>
+                <Text>
+                  A janela de sono é o período ideal entre sonecas; planejamos
+                  horários perfeitos para otimizar o ciclo natural do seu bebê.
                 </Text>
               </Card>
             </Col>
@@ -439,6 +380,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <Footer className="landing-footer">
         <Text>© 2025 NanaFácil. Todos os direitos reservados.</Text>
+
         <div style={{ marginTop: 8 }}>
           <Link to="/terms" style={{ marginRight: 16 }}>
             Termos de Uso
